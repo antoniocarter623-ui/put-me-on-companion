@@ -1,14 +1,2547 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Put Me On - Companion</title>
-    <!-- Tailwind CSS via CDN for speed/simplicity -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#09090b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Put Me On - Professor Edition</title>
+    
+    <!-- EXTERNAL LIBRARIES -->
     <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-slate-950">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <style>
+        /* =========================================
+           1. CORE DESIGN SYSTEM & VARIABLES
+           ========================================= */
+        :root {
+            /* Palette */
+            --bg-deep: #000000; /* True Black */
+            --bg-surface: #0a0a0a;
+            --bg-card: #121212;
+            --bg-card-hover: #1c1c1c;
+            
+            /* Glassmorphism */
+            --glass-header: rgba(10, 10, 10, 0.95);
+            --glass-nav: rgba(10, 10, 10, 0.98);
+            --glass-modal: rgba(0, 0, 0, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            
+            /* Brand Colors */
+            --primary: #3b82f6;       /* Electric Blue */
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --accent: #fbbf24;        /* Gold */
+            --accent-glow: rgba(251, 191, 36, 0.4);
+            --danger: #ef4444;        /* Red */
+            --success: #10b981;       /* Emerald */
+            --admin-gold: #FFD700;    /* Professor Gold */
+
+            /* Dimensions */
+            --header-h: 64px;
+            --nav-h: 84px; /* Includes safe area */
+            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        /* Reset & Base */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            user-select: none; /* App-like behavior */
+        }
+
+        /* Allow select in inputs */
+        input, textarea { user-select: text; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Text Utilities */
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* =========================================
+           2. LAYOUT ENGINE
+           ========================================= */
+        #app-root {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: radial-gradient(circle at 50% 0%, #1a1a2e 0%, var(--bg-deep) 60%);
+        }
+
+        /* Scrollable Middle Area */
+        #viewport {
+            flex: 1;
+            position: relative;
+            overflow: hidden; /* Each view handles its own scroll */
+        }
+
+        /* View Containers - Ensuring Scroll Works */
+        .view-section {
+            display: none; /* Hidden by default */
+            height: 100%;
+            width: 100%;
+            flex-direction: column;
+            overflow-y: auto; /* ENABLE SCROLLING */
+            overflow-x: hidden;
+            padding-bottom: calc(var(--nav-h) + 40px); /* Extra space for Nav */
+            scrollbar-width: none; /* Hide scrollbar Firefox */
+            -webkit-overflow-scrolling: touch; /* Smooth scroll iOS */
+        }
+        .view-section::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome */
+
+        .view-section.active {
+            display: flex;
+            animation: fadeView 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* =========================================
+           3. COMPONENT STYLING
+           ========================================= */
+
+        /* --- Header --- */
+        .app-header {
+            height: var(--header-h);
+            background: var(--glass-header);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 50;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .header-logo {
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-badge {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .live-dot { width: 6px; height: 6px; background: #ef4444; border-radius: 50%; animation: pulseRed 1.5s infinite; }
+
+        /* --- Bottom Navigation --- */
+        .app-nav {
+            height: var(--nav-h);
+            background: var(--glass-nav);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid var(--glass-border);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            z-index: 50;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 16px;
+            padding-bottom: var(--safe-area-bottom);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 20%;
+            color: #52525b;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .nav-item i { font-size: 1.35rem; margin-bottom: 6px; transition: transform 0.2s; }
+        .nav-item span { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+
+        .nav-item.active { color: var(--accent); }
+        .nav-item.active i { transform: translateY(-2px); text-shadow: 0 0 15px var(--accent-glow); }
+        .nav-item.active span { opacity: 1; }
+        
+        .nav-item.active::after {
+            content: ''; position: absolute; top: -16px; width: 30px; height: 2px;
+            background: var(--accent); box-shadow: 0 2px 10px var(--accent);
+            border-radius: 2px;
+        }
+
+        /* --- Cards --- */
+        .card-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background 0.2s;
+        }
+        
+        .card-glass:active { transform: scale(0.98); background: rgba(255,255,255,0.05); }
+
+        /* --- Buttons --- */
+        .btn-core {
+            border: none; outline: none; cursor: pointer;
+            font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+            border-radius: 14px; padding: 14px 24px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative; overflow: hidden;
+        }
+        .btn-core:active { transform: scale(0.96); opacity: 0.9; }
+        
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px var(--primary-glow); }
+        .btn-accent { background: var(--accent); color: #000; box-shadow: 0 4px 15px var(--accent-glow); }
+
+        /* --- Inputs --- */
+        .input-std {
+            width: 100%;
+            background: #18181b;
+            border: 1px solid #27272a;
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .input-std:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); background: #000; }
+        .input-std::placeholder { color: #52525b; font-weight: 500; }
+
+        /* --- Full Screen Overlays (Modals) --- */
+        .fs-overlay {
+            position: fixed; inset: 0;
+            background: var(--glass-modal);
+            backdrop-filter: blur(30px);
+            z-index: 100;
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; flex-direction: column;
+        }
+        .fs-overlay.open { transform: translateY(0); opacity: 1; }
+
+        /* --- Sub Navigation (Pills) --- */
+        .sub-nav {
+            display: flex; gap: 8px; padding: 12px 16px;
+            background: rgba(10,10,10,0.8); backdrop-filter: blur(10px);
+            position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--glass-border);
+        }
+        .sub-pill {
+            flex: 1; text-align: center; padding: 8px 0; border-radius: 10px;
+            font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+            color: #71717a; background: transparent; transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .sub-pill.active { background: #27272a; color: white; border-color: #3f3f46; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+        /* --- Chat Bubbles --- */
+        .chat-row { display: flex; margin-bottom: 16px; width: 100%; animation: slideUp 0.3s ease-out backwards; }
+        .chat-row.mine { justify-content: flex-end; }
+        .chat-bubble {
+            max-width: 80%; padding: 12px 16px; border-radius: 20px; font-size: 0.9rem; line-height: 1.4;
+            position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chat-row.mine .chat-bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .chat-row.other .chat-bubble { background: #27272a; color: #e4e4e7; border-bottom-left-radius: 4px; }
+        .chat-meta { font-size: 0.65rem; color: #71717a; margin-top: 4px; padding: 0 4px; }
+        .chat-row.mine .chat-meta { text-align: right; }
+
+        /* Grading Sliders (Custom) */
+        .slider-group { margin-bottom: 16px; }
+        .slider-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .slider-label { font-size: 0.7rem; font-weight: 800; color: #a1a1aa; letter-spacing: 1px; text-transform: uppercase; }
+        .slider-val { font-size: 0.8rem; font-weight: 900; color: var(--accent); }
+
+        /* --- Animations --- */
+        @keyframes fadeView { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes goldShimmer { 
+            0% { background-position: 200% center; } 
+            100% { background-position: -200% center; } 
+        }
+
+        /* Golden Effect for Leaderboard */
+        .shimmer-gold {
+            background: linear-gradient(120deg, #fbbf24 20%, #fff 50%, #fbbf24 80%);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: goldShimmer 3s linear infinite;
+            font-weight: 900;
+        }
+
+        .border-gold {
+            border: 1px solid rgba(251, 191, 36, 0.5) !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.15) inset, 0 0 10px rgba(251, 191, 36, 0.1);
+        }
+        
+        .golden-row {
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.05), rgba(0,0,0,0) 50%, rgba(251, 191, 36, 0.05));
+            background-size: 200% 100%;
+            animation: goldenShine 3s infinite linear;
+            border: 1px solid rgba(251, 191, 36, 0.3) !important;
+        }
+        @keyframes goldenShine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Toast */
+        #toast-container {
+            position: fixed; top: 90px; left: 50%; transform: translateX(-50%);
+            z-index: 200; pointer-events: none; display: flex; flex-direction: column; gap: 8px; width: 90%; max-width: 350px;
+        }
+        .toast-msg {
+            background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); color: white;
+            padding: 12px 20px; border-radius: 50px;
+            font-size: 0.85rem; font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex; align-items: center; gap: 10px;
+            animation: slideDownToast 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast-msg.success i { color: var(--success); }
+        .toast-msg.error i { color: var(--danger); }
+        @keyframes slideDownToast { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Loading Spinner */
+        .spinner { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s linear infinite; }
+        
+        /* =========================================
+           4. REDESIGNED PROFILE - NO COVER PHOTO
+           ========================================= */
+        
+        .profile-container { padding: 24px 20px; display: flex; flex-direction: column; gap: 20px; }
+        .profile-header-split { display: flex; align-items: flex-start; gap: 24px; margin-bottom: 8px; width: 100%; }
+        .profile-avatar-box { position: relative; flex-shrink: 0; }
+        .avatar-lg { width: 120px; height: 120px; border-radius: 24px; background: #18181b; border: 2px solid rgba(255,255,255,0.1); overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .avatar-edit-btn { position: absolute; bottom: -6px; right: -6px; width: 36px; height: 36px; background: var(--primary); color: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 4px solid var(--bg-deep); box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; }
+        .profile-info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; padding-top: 4px; }
+        .user-handle-lg { font-size: 1.75rem; font-weight: 900; color: white; line-height: 1.1; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .user-status-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .badge-rank-pill { background: linear-gradient(135deg, #fbbf24, #d97706); color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; }
+        /* NEW: ADMIN BADGE */
+        .badge-admin-pill { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+        
+        .badge-class-text { color: #a1a1aa; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; }
+        .stats-compact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .stat-mini-box { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 6px 4px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-mini-val { font-size: 0.9rem; font-weight: 800; color: white; line-height: 1; }
+        .stat-mini-lbl { font-size: 0.55rem; color: #71717a; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+        .bio-box-container { background: #121212; border: 1px solid #27272a; border-radius: 16px; padding: 20px; position: relative; }
+        .bio-label { position: absolute; top: -10px; left: 16px; background: var(--bg-deep); padding: 0 8px; font-size: 0.7rem; font-weight: 800; color: #52525b; text-transform: uppercase; letter-spacing: 1px; }
+        .bio-content { font-size: 0.95rem; color: #d4d4d8; line-height: 1.6; font-style: italic; }
+
+        /* --- Menu Popup --- */
+        .menu-popup { position: absolute; top: 70px; right: 20px; width: 200px; background: #18181b; border: 1px solid #27272a; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); padding: 8px; display: none; flex-direction: column; z-index: 300; transform-origin: top right; }
+        .menu-popup.open { display: flex; animation: scaleIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .menu-item { padding: 12px 16px; border-radius: 10px; color: white; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transition: background 0.2s; cursor: pointer; }
+        .menu-item:hover { background: #27272a; }
+        .menu-item i { color: #71717a; width: 20px; text-align: center; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        /* =========================================
+           5. NEW: CHAT CHANNEL STYLING
+           ========================================= */
+        .channel-pill {
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #71717a;
+            background: #18181b;
+            border: 1px solid #27272a;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .channel-pill i { opacity: 0.6; font-size: 0.9em; }
+
+        .channel-pill.active {
+            color: white;
+            border-color: transparent;
+            transform: scale(1.05);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        }
+        
+        /* Custom "Pizzazz" for Channels */
+        .ch-rap.active { background: linear-gradient(135deg, #dc2626, #991b1b); }
+        .ch-trap.active { background: linear-gradient(135deg, #9333ea, #581c87); }
+        .ch-rnb.active { background: linear-gradient(135deg, #ec4899, #be185d); }
+        .ch-old.active { background: linear-gradient(135deg, #d97706, #b45309); }
+        .ch-lofi.active { background: linear-gradient(135deg, #6366f1, #4338ca); }
+        .ch-pop.active { background: linear-gradient(135deg, #f472b6, #db2777); }
+        .ch-alt.active { background: linear-gradient(135deg, #10b981, #047857); }
+        .ch-aux.active { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+        /* =========================================
+           6. NEW: FEED ACTIONS
+           ========================================= */
+        .post-action-btn {
+            background: transparent;
+            color: #71717a;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .post-action-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+        .post-action-btn.liked { color: #ef4444; }
+        .post-action-btn.liked i { animation: popHeart 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        /* ADMIN DELETE BUTTON */
+        .post-delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-left: auto;
+        }
+        
+        @keyframes popHeart { 0% { transform: scale(1); } 50% { transform: scale(1.4); } 100% { transform: scale(1); } }
+
+        /* Comment Section */
+        .comment-section {
+            border-top: 1px solid #27272a;
+            margin-top: 12px;
+            padding-top: 12px;
+            display: none;
+        }
+        .comment-section.open { display: block; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* =========================================
+           7. ADMIN PANEL STYLES
+           ========================================= */
+        .admin-podium {
+            background: linear-gradient(145deg, #3f3f46, #18181b);
+            border: 1px solid var(--admin-gold);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.15);
+            display: none; /* Hidden by default */
+        }
+        .admin-podium.visible { display: block; animation: slideDown 0.4s ease-out; }
+
+        .admin-badge-icon {
+            color: var(--admin-gold);
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+
+        /* =========================================
+           8. NEW: SOCIAL BATCH 1 (DM & NOTIFS)
+           ========================================= */
+        .red-dot {
+            width: 8px; height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px; right: 2px;
+            border: 1px solid #000;
+            display: none;
+        }
+        .red-dot.visible { display: block; }
+        
+        /* Inbox Items */
+        .inbox-item {
+            display: flex; gap: 12px;
+            padding: 12px;
+            background: #18181b;
+            border-radius: 12px;
+            border: 1px solid #27272a;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .inbox-item:active { background: #27272a; }
+        
+        /* Notification Items */
+        .notif-item {
+            display: flex; gap: 12px; align-items: center;
+            padding: 12px;
+            background: #18181b;
+            border-radius: 12px;
+            border: 1px solid #27272a;
+            margin-bottom: 8px;
+        }
+        .notif-icon {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .bg-blue-glass { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .bg-red-glass { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .bg-green-glass { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+
+        /* =========================================
+           9. NEW: ROTATION
+           ========================================= */
+        .rotation-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.85rem;
+        }
+        .rotation-num {
+            font-weight: 900; color: var(--accent); font-size: 0.7rem; opacity: 0.7;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- =========================================
+         LAYER 1: AUTHENTICATION
+         ========================================= -->
+    <div id="auth-layer" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-6 overflow-hidden">
+        <!-- Animated Background Mesh -->
+        <div class="absolute inset-0 opacity-30">
+            <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/30 rounded-full blur-[100px] animate-pulse"></div>
+            <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-yellow-600/30 rounded-full blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
+        </div>
+
+        <div class="relative z-10 w-full max-w-sm text-center">
+            <div class="w-24 h-24 bg-gradient-to-tr from-yellow-400 to-yellow-600 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl shadow-yellow-500/20 rotate-3 transform transition hover:rotate-6">
+                <i class="fas fa-music text-4xl text-black"></i>
+            </div>
+            
+            <h1 class="text-4xl font-black text-white mb-2 tracking-tighter uppercase">Put Me On</h1>
+            <p class="text-zinc-400 mb-12 font-medium text-lg">The Live Music Classroom</p>
+            
+            <!-- Login Form -->
+            <div id="view-auth-login" class="space-y-4">
+                <div class="group relative">
+                    <i class="fas fa-envelope absolute left-4 top-4 text-zinc-500 group-focus-within:text-white transition-colors"></i>
+                    <input type="email" id="login-email" placeholder="Email Address" class="input-std pl-12">
+                </div>
+                <div class="group relative">
+                    <i class="fas fa-lock absolute left-4 top-4 text-zinc-500 group-focus-within:text-white transition-colors"></i>
+                    <input type="password" id="login-pass" placeholder="Password" class="input-std pl-12">
+                </div>
+                
+                <button type="button" onclick="App.auth.login()" class="btn-core btn-primary w-full shadow-xl mt-4">
+                    Sign In
+                </button>
+                
+                <div class="flex justify-between items-center mt-6 px-2">
+                    <button type="button" onclick="App.ui.toggleAuth(true)" class="text-sm font-bold text-zinc-500 hover:text-white transition-colors">Create Account</button>
+                    <button type="button" onclick="App.auth.guest()" class="text-sm font-bold text-blue-500 hover:text-blue-400 transition-colors">Guest Pass</button>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="view-auth-register" class="space-y-4 hidden">
+                <div class="group relative">
+                    <i class="fas fa-at absolute left-4 top-4 text-zinc-500 group-focus-within:text-white transition-colors"></i>
+                    <input type="text" id="reg-handle" placeholder="Choose Handle" class="input-std pl-12">
+                </div>
+                <div class="group relative">
+                    <i class="fas fa-envelope absolute left-4 top-4 text-zinc-500 group-focus-within:text-white transition-colors"></i>
+                    <input type="email" id="reg-email" placeholder="Email Address" class="input-std pl-12">
+                </div>
+                <div class="group relative">
+                    <i class="fas fa-lock absolute left-4 top-4 text-zinc-500 group-focus-within:text-white transition-colors"></i>
+                    <input type="password" id="reg-pass" placeholder="Password (6+ chars)" class="input-std pl-12">
+                </div>
+                
+                <button type="button" onclick="App.auth.register()" class="btn-core btn-accent w-full shadow-xl mt-4 text-black">
+                    Join Class
+                </button>
+                
+                <button type="button" onclick="App.ui.toggleAuth(false)" class="text-sm font-bold text-zinc-500 hover:text-white mt-4 block w-full">Back to Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         LAYER 2: MAIN APPLICATION
+         ========================================= -->
+    <div id="app-root" class="hidden">
+        
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-logo">
+                <span class="text-2xl">🎵</span>
+                <span>PMO</span>
+                <div class="live-badge">
+                    <div class="live-dot"></div> LIVE
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <!-- NEW: BELL (NOTIFICATIONS) -->
+                <button onclick="App.ui.openNotifications()" class="relative text-zinc-400 hover:text-white transition-colors text-xl w-8 h-8 flex items-center justify-center">
+                    <i class="fas fa-bell"></i>
+                    <div id="notif-dot" class="red-dot"></div>
+                </button>
+                <!-- NEW: MAIL (INBOX) -->
+                <button onclick="App.ui.openInbox()" class="text-zinc-400 hover:text-white transition-colors text-xl w-8 h-8 flex items-center justify-center">
+                    <i class="fas fa-envelope"></i>
+                </button>
+
+                <button onclick="App.ui.openSearch()" class="text-zinc-400 hover:text-white transition-colors text-xl w-8 h-8 flex items-center justify-center">
+                    <i class="fas fa-search"></i>
+                </button>
+                <!-- Toggle Menu -->
+                <button onclick="App.ui.toggleHeaderMenu()" class="relative w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden active:scale-95 transition-transform">
+                    <img id="header-avatar" class="w-full h-full object-cover hidden">
+                    <div id="header-init" class="w-full h-full flex items-center justify-center font-bold text-xs text-zinc-500">?</div>
+                </button>
+            </div>
+        </header>
+
+        <!-- HEADER POPUP MENU -->
+        <div id="header-menu" class="menu-popup">
+            <div class="menu-item" onclick="App.ui.switchTab('profile'); App.ui.toggleHeaderMenu()">
+                <i class="fas fa-user"></i> My Profile
+            </div>
+            <div class="menu-item" onclick="App.ui.openSettings(); App.ui.toggleHeaderMenu()">
+                <i class="fas fa-cog"></i> Settings
+            </div>
+             <div class="menu-item text-red-400" onclick="App.auth.logout()">
+                <i class="fas fa-sign-out-alt text-red-400"></i> Log Out
+            </div>
+        </div>
+
+        <!-- VIEWPORT -->
+        <div id="viewport">
+
+            <!-- VIEW 1: THE SHOW -->
+            <div id="view-show" class="view-section active">
+                <div class="sub-nav">
+                    <button onclick="App.ui.subTab('stage')" id="sub-stage" class="sub-pill active">Main Stage</button>
+                    <button onclick="App.ui.subTab('queue')" id="sub-queue" class="sub-pill">The Queue</button>
+                    <button onclick="App.ui.subTab('rank')" id="sub-rank" class="sub-pill">Leaderboard</button>
+                </div>
+
+                <div class="p-4 flex-1">
+                    
+                    <!-- STAGE (Live Grading) -->
+                    <div id="sv-stage" class="space-y-6">
+                        
+                        <!-- NEW: ADMIN PODIUM (The Podium) -->
+                        <div id="admin-panel-control" class="admin-podium">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-white font-black uppercase tracking-widest text-xs flex items-center gap-2">
+                                    <i class="fas fa-crown text-yellow-500"></i> Professor's Podium
+                                </h3>
+                                <div class="bg-yellow-500/20 text-yellow-500 text-[10px] font-bold px-2 py-1 rounded">ADMIN ACCESS</div>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <input id="admin-artist" placeholder="Enter Artist..." class="w-full bg-zinc-900 border border-zinc-700 text-white rounded-lg p-3 text-sm focus:border-yellow-500 outline-none">
+                                <input id="admin-song" placeholder="Enter Song Title..." class="w-full bg-zinc-900 border border-zinc-700 text-white rounded-lg p-3 text-sm focus:border-yellow-500 outline-none">
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button onclick="App.admin.spinTrack()" class="flex-1 bg-yellow-500 text-black font-black text-sm uppercase py-3 rounded-lg hover:bg-yellow-400 shadow-lg">
+                                    <i class="fas fa-play mr-1"></i> Spin It
+                                </button>
+                                <button id="btn-toggle-vote" onclick="App.admin.toggleVoting()" class="px-4 bg-zinc-700 text-white font-bold rounded-lg border border-zinc-600 text-xs uppercase">
+                                    Lock Vote
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Now Playing Card -->
+                        <div class="card-glass p-1 rounded-[32px] relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                            
+                            <div class="bg-[#0f0f11] rounded-[28px] p-6 relative z-10 h-full">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                        <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Spinning Now</span>
+                                    </div>
+                                    <button id="live-heart-btn" onclick="App.data.toggleLiveLike()" class="text-2xl text-zinc-600 hover:text-red-500 active:scale-75 transition-transform z-20 relative">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                </div>
+
+                                <div class="mb-6 overflow-hidden">
+                                    <h2 id="live-artist" class="text-3xl font-black text-white leading-tight mb-2 tracking-tight text-truncate">STANDBY</h2>
+                                    <h3 id="live-song" class="text-lg font-medium text-blue-400 text-truncate">Waiting for class to start...</h3>
+                                </div>
+
+                                <div id="live-user-badge" class="flex items-center gap-3 bg-white/5 p-2 rounded-full w-max pr-4 opacity-0 transition-opacity">
+                                    <!-- Populated by JS -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grading Panel -->
+                        <div class="bg-zinc-900/50 border border-white/5 rounded-[24px] p-6">
+                            <!-- Idle State -->
+                            <div id="grade-idle" class="text-center py-10">
+                                <div class="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                                    <i class="fas fa-headphones text-2xl text-zinc-500"></i>
+                                </div>
+                                <h3 class="text-white font-bold text-lg">Listen Mode</h3>
+                                <p class="text-sm text-zinc-500 mt-2">Grading unlocks when the song finishes.</p>
+                            </div>
+
+                            <!-- Active Grading -->
+                            <div id="grade-active" class="hidden">
+                                <div class="flex items-end justify-between mb-6 gap-2">
+                                    <div class="flex flex-col justify-end">
+                                        <span class="text-[10px] font-bold text-green-500 uppercase tracking-widest mb-0.5">Grading Open</span>
+                                        <span class="text-[10px] text-zinc-500">Rate 1-100</span>
+                                    </div>
+                                    <button onclick="App.data.submitGrade()" class="bg-blue-600 text-white font-black text-xs uppercase tracking-wider py-3 px-6 rounded-xl shadow-lg shadow-blue-600/20 active:scale-95 transition-transform mb-1">
+                                        Submit
+                                    </button>
+                                    <div id="total-score" class="text-5xl font-black text-white tracking-tighter leading-none">0</div>
+                                </div>
+
+                                <div class="space-y-5 mb-8">
+                                    <div class="slider-group">
+                                        <div class="slider-header"><span class="slider-label">Flow / Delivery</span><span id="val-flow" class="slider-val">0</span></div>
+                                        <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.ui.updateScore('flow', this.value)">
+                                    </div>
+                                    <div class="slider-group">
+                                        <div class="slider-header"><span class="slider-label">Production / Beat</span><span id="val-beat" class="slider-val">0</span></div>
+                                        <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.ui.updateScore('beat', this.value)">
+                                    </div>
+                                    <div class="slider-group">
+                                        <div class="slider-header"><span class="slider-label">Lyrics / Bars</span><span id="val-bars" class="slider-val">0</span></div>
+                                        <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.ui.updateScore('bars', this.value)">
+                                    </div>
+                                    <div class="slider-group">
+                                        <div class="slider-header"><span class="slider-label">Vibe / Energy</span><span id="val-vibe" class="slider-val">0</span></div>
+                                        <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.ui.updateScore('vibe', this.value)">
+                                    </div>
+                                    <div class="slider-group">
+                                        <div class="slider-header"><span class="slider-label text-yellow-500">Overall Aesthetic</span><span id="val-aes" class="slider-val">0</span></div>
+                                        <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.ui.updateScore('aes', this.value)">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Locked State -->
+                            <div id="grade-locked" class="hidden text-center py-10">
+                                <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-500">
+                                    <i class="fas fa-check text-2xl"></i>
+                                </div>
+                                <h3 class="text-white font-bold text-xl">Locked In</h3>
+                                <p class="text-sm text-zinc-500 mt-2">Wait for the professor's final score.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUEUE -->
+                    <div id="sv-queue" class="hidden space-y-6">
+                        <div class="bg-zinc-800/50 p-6 rounded-[24px] border border-zinc-700/50">
+                            <h3 class="text-xs font-black text-white uppercase tracking-widest mb-4">Request a Song</h3>
+                            <div class="space-y-3 mb-4">
+                                <input id="q-artist" placeholder="Artist Name" class="input-std text-sm">
+                                <input id="q-song" placeholder="Song Title" class="input-std text-sm">
+                            </div>
+                            <button onclick="App.data.addToQueue()" class="btn-core btn-primary w-full py-3 text-sm">Add to Queue</button>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between items-end mb-4 px-2">
+                                <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-widest">Coming Up</h3>
+                                <span class="text-[10px] bg-zinc-800 text-zinc-400 px-2 py-1 rounded border border-zinc-700">Oldest First</span>
+                            </div>
+                            <div id="queue-list" class="space-y-3 pb-20"></div>
+                        </div>
+                    </div>
+
+                    <!-- RANK -->
+                    <div id="sv-rank" class="hidden">
+                        <div class="text-center mb-6">
+                            <h2 class="text-2xl font-black text-white">Daily Honor Roll</h2>
+                            <p class="text-xs text-zinc-500 mt-1">Top scored tracks from today's class</p>
+                        </div>
+                        <div id="rank-list" class="space-y-3 pb-20"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- VIEW 2: SOCIAL FEED (ENHANCED) -->
+            <div id="view-feed" class="view-section">
+                <!-- Guest Lock -->
+                <div id="social-lock" class="hidden absolute inset-0 bg-black/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
+                    <i class="fas fa-lock text-4xl text-zinc-600 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-white mb-2">Student Access Only</h2>
+                    <p class="text-sm text-zinc-400 mb-8 max-w-[250px]">Create a profile to post, like, and follow others.</p>
+                    <button onclick="App.auth.logout()" class="btn-core btn-primary w-full max-w-xs">Create Profile</button>
+                </div>
+
+                <!-- Feed Search -->
+                <div class="sticky top-0 bg-zinc-950/95 backdrop-blur z-20 px-4 py-3 border-b border-zinc-800">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-3.5 text-zinc-500"></i>
+                        <input id="feed-search" placeholder="Find students..." class="w-full bg-zinc-900 border border-zinc-800 rounded-full pl-10 pr-4 py-3 text-sm text-white outline-none focus:border-primary transition-colors" oninput="App.data.searchUsers(this.value, 'feed-search-results')">
+                    </div>
+                    <div id="feed-search-results" class="flex flex-col gap-2 mt-2 empty:hidden"></div>
+                </div>
+
+                <div class="p-4">
+                    <!-- Composer -->
+                    <div class="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 mb-8">
+                        <div class="flex gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-full bg-zinc-800 shrink-0 overflow-hidden">
+                                <img id="feed-my-avatar" class="w-full h-full object-cover hidden">
+                                <div id="feed-my-init" class="w-full h-full flex items-center justify-center text-zinc-500 font-bold">?</div>
+                            </div>
+                            <div class="flex-1">
+                                <textarea id="post-input" placeholder="What's the vibe?" class="bg-transparent w-full text-white text-sm outline-none resize-none h-12 pt-2 placeholder-zinc-600"></textarea>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-2 border-t border-zinc-800 pt-3">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-music text-zinc-600 text-xs"></i>
+                                <input id="post-song-input" placeholder="Attach Song (Optional): Artist - Title" class="bg-transparent text-xs text-blue-400 w-full outline-none placeholder-zinc-700">
+                            </div>
+                            <div class="flex justify-end">
+                                <button onclick="App.data.postFeed()" class="bg-blue-600 text-white text-xs font-bold px-5 py-2 rounded-full active:scale-95 transition-transform">POST</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-zinc-500 uppercase mb-4 px-2">Global Vibes</h3>
+                    <div id="feed-list" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- VIEW 3: CHAT (REDESIGNED) -->
+            <div id="view-chat" class="view-section h-full relative">
+                <div id="chat-lock" class="hidden absolute inset-0 bg-black/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-8 text-center">
+                    <i class="fas fa-comments text-4xl text-zinc-600 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-white mb-2">Chat Locked</h2>
+                    <button onclick="App.auth.logout()" class="text-blue-500 font-bold underline mt-4">Sign In</button>
+                </div>
+
+                <!-- Updated Channel Selector with "Pizzazz" -->
+                <div class="bg-zinc-950/95 backdrop-blur z-20 px-4 py-3 border-b border-zinc-800 flex gap-2 overflow-x-auto no-scrollbar shrink-0">
+                    <button onclick="App.ui.setChannel('rap')" id="ch-rap" class="channel-pill ch-rap active"><i class="fas fa-microphone"></i> Rap 101</button>
+                    <button onclick="App.ui.setChannel('trap')" id="ch-trap" class="channel-pill ch-trap"><i class="fas fa-flask"></i> Trap Lab</button>
+                    <button onclick="App.ui.setChannel('rnb')" id="ch-rnb" class="channel-pill ch-rnb"><i class="fas fa-heart"></i> R&B Theory</button>
+                    <button onclick="App.ui.setChannel('old')" id="ch-old" class="channel-pill ch-old"><i class="fas fa-compact-disc"></i> Old School</button>
+                    <button onclick="App.ui.setChannel('lofi')" id="ch-lofi" class="channel-pill ch-lofi"><i class="fas fa-coffee"></i> Lofi Hall</button>
+                    <button onclick="App.ui.setChannel('pop')" id="ch-pop" class="channel-pill ch-pop"><i class="fas fa-star"></i> Pop Quiz</button>
+                    <button onclick="App.ui.setChannel('alt')" id="ch-alt" class="channel-pill ch-alt"><i class="fas fa-guitar"></i> Alt/Indie</button>
+                    <button onclick="App.ui.setChannel('aux')" id="ch-aux" class="channel-pill ch-aux"><i class="fas fa-plug"></i> The Aux</button>
+                </div>
+
+                <div id="chat-feed" class="flex-1 overflow-y-auto p-4 flex flex-col pb-24"></div>
+
+                <div class="absolute bottom-[80px] w-full bg-zinc-900 border-t border-zinc-800 p-3 flex gap-2 z-30">
+                    <input id="chat-input" placeholder="Message class..." class="flex-1 bg-zinc-950 text-white rounded-full px-5 py-3 text-sm border border-zinc-800 outline-none focus:border-primary transition-colors" onkeypress="if(event.key==='Enter') App.data.sendChat()">
+                    <button onclick="App.data.sendChat()" class="w-12 h-12 bg-blue-600 rounded-full text-white shadow-lg flex items-center justify-center active:scale-90 transition-transform"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+            <!-- VIEW 4: PROFILE (ME) - REDESIGNED: NO COVER PHOTO -->
+            <div id="view-profile" class="view-section">
+                
+                <div class="profile-container">
+                    
+                    <!-- NEW HEADER: SPLIT LAYOUT -->
+                    <div class="profile-header-split">
+                        <!-- Left: Avatar -->
+                        <div class="profile-avatar-box">
+                            <div class="avatar-lg">
+                                <img id="profile-img" class="w-full h-full object-cover hidden">
+                                <div id="profile-init" class="w-full h-full flex items-center justify-center text-5xl font-black text-zinc-700">?</div>
+                            </div>
+                            <!-- Float Edit Button -->
+                            <button onclick="App.ui.openEditProfile()" class="avatar-edit-btn">
+                                <i class="fas fa-pen text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- Right: Info + Stats -->
+                        <div class="profile-info-box">
+                            <h2 id="profile-handle" class="user-handle-lg">@Guest</h2>
+                            
+                            <div class="user-status-badges">
+                                <div id="profile-rank" class="badge-rank-pill">Freshman</div>
+                                <span class="badge-class-text">Class of '26</span>
+                            </div>
+
+                            <!-- COMPACT STATS GRID -->
+                            <div class="stats-compact-grid">
+                                <div class="stat-mini-box">
+                                    <div id="stat-followers" class="stat-mini-val">0</div>
+                                    <div class="stat-mini-lbl">Followers</div>
+                                </div>
+                                <div class="stat-mini-box">
+                                    <div id="stat-following" class="stat-mini-val">0</div>
+                                    <div class="stat-mini-lbl">Following</div>
+                                </div>
+                                <div class="stat-mini-box">
+                                    <div id="stat-avg" class="stat-mini-val text-blue-400">0.0</div>
+                                    <div class="stat-mini-lbl">Avg</div>
+                                </div>
+                                <div class="stat-mini-box">
+                                    <div id="stat-graded" class="stat-mini-val">0</div>
+                                    <div class="stat-mini-lbl">Rated</div>
+                                </div>
+                                <div class="stat-mini-box">
+                                    <div id="stat-plugs" class="stat-mini-val">0</div>
+                                    <div class="stat-mini-lbl">Plugs</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DEDICATED BIO BOX -->
+                    <div class="bio-box-container">
+                        <div class="bio-label">My Vibe</div>
+                        <!-- NEW: ANTHEM DISPLAY -->
+                        <div id="profile-anthem" class="mb-3 hidden"></div>
+                        <div id="profile-bio" class="bio-content">"No vibe set. Tap edit to update."</div>
+                        
+                        <!-- NEW: ROTATION DISPLAY -->
+                        <div class="mt-6 border-t border-zinc-800 pt-4">
+                            <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Heavy Rotation</div>
+                            <div id="profile-rotation" class="space-y-1.5"></div>
+                        </div>
+                    </div>
+
+                    <!-- My Projects -->
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center mb-4 px-1">
+                            <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest">My Projects</h3>
+                            <button onclick="App.data.createList()" class="text-[10px] bg-blue-600/20 text-blue-400 px-3 py-1.5 rounded-full font-bold hover:bg-blue-600 hover:text-white transition-colors"><i class="fas fa-plus mr-1"></i> New</button>
+                        </div>
+                        <div id="my-projects" class="space-y-3 empty:text-center empty:text-xs empty:text-zinc-600 empty:py-4"></div>
+                    </div>
+
+                    <!-- My Crate -->
+                    <div class="pb-20">
+                        <h3 class="text-sm font-bold text-red-500 uppercase tracking-widest mb-4 px-1">My Crate</h3>
+                        <div id="my-crate" class="space-y-3 pb-10"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- VIEW 5: SETTINGS (UPGRADED) -->
+             <div id="view-settings" class="view-section">
+                <div class="p-6">
+                    <h2 class="text-2xl font-black text-white mb-6">Settings</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Functional: Notifications -->
+                        <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-white">Notifications</div>
+                                <div class="text-[10px] text-zinc-500">Enable browser alerts</div>
+                            </div>
+                            <button onclick="App.settings.requestNotify()" class="bg-zinc-800 p-2 rounded-lg text-zinc-400 hover:text-white transition-colors">
+                                <i class="fas fa-bell"></i>
+                            </button>
+                        </div>
+
+                        <!-- Functional: Account Security -->
+                        <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+                             <div class="font-bold text-white mb-2">Account Management</div>
+                             <div class="flex flex-col gap-2">
+                                <button onclick="App.settings.resetPassword()" class="w-full text-left bg-zinc-800/50 p-3 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+                                    <i class="fas fa-key text-yellow-500"></i> Reset Password via Email
+                                </button>
+                                <button onclick="App.settings.clearCache()" class="w-full text-left bg-zinc-800/50 p-3 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+                                    <i class="fas fa-sync-alt text-blue-500"></i> Clear Cache / Hard Refresh
+                                </button>
+                             </div>
+                        </div>
+
+                        <!-- General -->
+                        <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-center cursor-pointer" onclick="App.ui.openEditProfile()">
+                            <span class="font-bold text-white">Edit Profile</span>
+                            <i class="fas fa-chevron-right text-zinc-500"></i>
+                        </div>
+
+                        <!-- THE SECRET DOOR (Faculty Lounge) -->
+                        <div class="mt-8 bg-zinc-950 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-2 opacity-10"><i class="fas fa-university text-6xl text-white"></i></div>
+                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-2">Faculty Access</h3>
+                            <p class="text-xs text-zinc-500 mb-4">Authorized personnel only. Enter access code to upgrade permissions.</p>
+                            
+                            <div class="flex gap-2">
+                                <input id="admin-code-input" type="password" placeholder="Access Code" class="bg-black border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-yellow-600 flex-1">
+                                <button onclick="App.admin.attemptLogin()" class="bg-zinc-800 text-zinc-300 text-xs font-bold px-4 rounded-lg hover:bg-yellow-600 hover:text-black transition-colors">Verify</button>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-8">
+                            <div class="text-[10px] text-zinc-600 font-mono">v7.4 ROTATION</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- NAV BAR -->
+        <nav class="app-nav">
+            <div onclick="App.ui.switchTab('show')" class="nav-item active" id="nav-show">
+                <i class="fas fa-broadcast-tower"></i><span>Show</span>
+            </div>
+            <div onclick="App.ui.switchTab('feed')" class="nav-item" id="nav-feed">
+                <i class="fas fa-globe"></i><span>Feed</span>
+            </div>
+            <div onclick="App.ui.switchTab('chat')" class="nav-item" id="nav-chat">
+                <i class="fas fa-comments"></i><span>Chat</span>
+            </div>
+            <div onclick="App.ui.switchTab('profile')" class="nav-item" id="nav-profile">
+                <i class="fas fa-user-circle"></i><span>Me</span>
+            </div>
+        </nav>
+
+    </div>
+
+    <!-- =========================================
+         LAYER 3: MODALS & OVERLAYS
+         ========================================= -->
+
+    <!-- TOAST -->
+    <div id="toast-container"></div>
+
+    <!-- MODAL: EDIT PROFILE (UPDATED) -->
+    <div id="fs-edit" class="fs-overlay p-6 overflow-y-auto">
+        <div class="flex justify-between items-center mb-8">
+            <button onclick="App.ui.closeEdit()" class="text-zinc-500 font-bold">Cancel</button>
+            <h2 class="text-white font-bold text-lg">Edit Profile</h2>
+            <button onclick="App.data.saveProfile()" class="text-blue-500 font-bold">Save</button>
+        </div>
+        
+        <div class="flex flex-col items-center mb-8 gap-4">
+            <!-- Avatar Upload -->
+            <div class="w-32 h-32 rounded-2xl bg-zinc-800 border-2 border-dashed border-zinc-700 flex items-center justify-center relative overflow-hidden group">
+                <img id="edit-prev" class="w-full h-full object-cover hidden">
+                <div id="edit-ph" class="text-center p-2"><i class="fas fa-camera text-2xl text-zinc-600 mb-1"></i><div class="text-[9px] text-zinc-600">Avatar</div></div>
+                <input type="file" onchange="App.data.handleImg(this, 'avatar')" class="absolute inset-0 opacity-0 cursor-pointer">
+            </div>
+            <div class="text-zinc-500 text-xs font-bold">Tap to change avatar</div>
+        </div>
+
+        <div class="space-y-6 pb-20">
+            <div>
+                <label class="text-xs font-bold text-zinc-500 uppercase block mb-2 ml-1">Display Handle</label>
+                <input id="edit-handle" class="input-std">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-zinc-500 uppercase block mb-2 ml-1">My Anthem</label>
+                <input id="edit-anthem" class="input-std" placeholder="Artist - Song">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-zinc-500 uppercase block mb-2 ml-1">My Vibe (Bio)</label>
+                <textarea id="edit-bio" class="input-std h-32 resize-none"></textarea>
+            </div>
+            
+            <!-- NEW: ROTATION EDIT -->
+            <div>
+                <label class="text-xs font-bold text-zinc-500 uppercase block mb-2 ml-1">Top 5 Rotation</label>
+                <div class="space-y-2">
+                    <input id="edit-rot-1" class="input-std py-3 text-xs" placeholder="#1 Artist - Song">
+                    <input id="edit-rot-2" class="input-std py-3 text-xs" placeholder="#2 Artist - Song">
+                    <input id="edit-rot-3" class="input-std py-3 text-xs" placeholder="#3 Artist - Song">
+                    <input id="edit-rot-4" class="input-std py-3 text-xs" placeholder="#4 Artist - Song">
+                    <input id="edit-rot-5" class="input-std py-3 text-xs" placeholder="#5 Artist - Song">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SEARCH -->
+    <div id="fs-search" class="fs-overlay p-4">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="flex-1 bg-zinc-900 rounded-2xl flex items-center px-4 border border-zinc-800">
+                <i class="fas fa-search text-zinc-500"></i>
+                <input id="modal-search-input" class="bg-transparent w-full p-4 text-white outline-none" placeholder="Search students..." oninput="App.data.searchUsers(this.value, 'modal-search-results')">
+            </div>
+            <button onclick="App.ui.closeSearch()" class="text-zinc-400 font-bold p-2">Close</button>
+        </div>
+        <div id="modal-search-results" class="flex-1 overflow-y-auto space-y-2 pb-20"></div>
+    </div>
+
+    <!-- MODAL: VIEW USER (UPDATED) -->
+    <div id="fs-view-profile" class="fs-overlay overflow-y-auto p-6">
+        <div class="flex justify-between items-center mb-6">
+            <button onclick="App.ui.closeViewProfile()" class="w-10 h-10 rounded-full bg-zinc-800 text-white flex items-center justify-center"><i class="fas fa-arrow-left"></i></button>
+            <div class="flex gap-2">
+                <!-- NEW: MESSAGE BUTTON -->
+                <button onclick="App.data.openDm(State.viewUid)" class="bg-zinc-800 text-white text-xs font-bold px-4 py-2.5 rounded-full border border-zinc-700 hover:bg-zinc-700 transition-colors">
+                    <i class="fas fa-envelope mr-1"></i> Message
+                </button>
+                <button id="btn-follow" onclick="App.data.toggleFollow()" class="bg-blue-600 text-white text-xs font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-900/20 active:scale-95 transition-transform">Follow</button>
+            </div>
+        </div>
+
+        <div class="flex gap-4 mb-6">
+            <div class="w-24 h-24 rounded-2xl bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700">
+                <img id="view-img" class="w-full h-full object-cover hidden">
+                <div id="view-init" class="w-full h-full flex items-center justify-center text-3xl font-black text-zinc-600">?</div>
+            </div>
+            <div class="flex-1 flex flex-col justify-center">
+                <h1 id="view-handle" class="text-2xl font-black text-white tracking-tight leading-none mb-2">@User</h1>
+                 <div class="flex gap-4">
+                    <div class="text-center"><span id="view-followers" class="font-bold text-white">0</span> <span class="text-zinc-500 text-[9px] uppercase">Followers</span></div>
+                    <div class="text-center"><span id="view-following" class="font-bold text-white">0</span> <span class="text-zinc-500 text-[9px] uppercase">Following</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 mb-8">
+            <div id="view-anthem" class="mb-3 hidden"></div>
+            <p id="view-bio" class="text-sm text-zinc-400 italic leading-relaxed">...</p>
+            
+            <!-- NEW: VIEW ROTATION -->
+            <div class="mt-6 border-t border-zinc-800 pt-4">
+                <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Heavy Rotation</div>
+                <div id="view-rotation" class="space-y-1.5"></div>
+            </div>
+        </div>
+            
+        <h3 class="text-xs font-bold text-zinc-500 uppercase mb-3">Public Projects</h3>
+        <div id="view-lists" class="space-y-3 mb-8"></div>
+        
+        <h3 class="text-xs font-bold text-zinc-500 uppercase mb-3">Favorites</h3>
+        <div id="view-crate" class="space-y-3 pb-20"></div>
+    </div>
+
+    <!-- MODAL: ADD TO LIST SELECTOR -->
+    <div id="modal-add-list" class="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
+        <div class="bg-[#18181b] w-full max-w-xs rounded-3xl border border-zinc-700 p-6 transform scale-95 transition-transform">
+            <h3 class="text-white font-bold text-lg mb-4 text-center">Add to Project</h3>
+            <div id="project-select-list" class="flex flex-col gap-2 max-h-60 overflow-y-auto mb-4"></div>
+            <button onclick="App.ui.closeAddList()" class="w-full py-3 bg-zinc-800 text-zinc-400 rounded-xl font-bold hover:bg-zinc-700 transition-colors">Cancel</button>
+        </div>
+    </div>
+    
+    <!-- NEW MODAL: NOTIFICATIONS -->
+    <div id="fs-notifications" class="fs-overlay p-4">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-black text-white">Notifications</h2>
+            <button onclick="App.ui.closeNotifications()" class="text-zinc-400 font-bold p-2">Close</button>
+        </div>
+        <div id="notif-list" class="space-y-2 pb-20 overflow-y-auto"></div>
+    </div>
+    
+    <!-- NEW MODAL: INBOX -->
+    <div id="fs-inbox" class="fs-overlay p-4">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-black text-white">Inbox</h2>
+            <button onclick="App.ui.closeInbox()" class="text-zinc-400 font-bold p-2">Close</button>
+        </div>
+        <div id="inbox-list" class="space-y-2 pb-20 overflow-y-auto"></div>
+    </div>
+    
+    <!-- NEW MODAL: DM THREAD -->
+    <div id="fs-dm-thread" class="fs-overlay flex flex-col h-full bg-black">
+        <div class="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur">
+            <button onclick="App.ui.closeDmThread()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400"><i class="fas fa-arrow-left"></i></button>
+            <h2 id="dm-recipient-name" class="font-bold text-white">Chat</h2>
+            <div class="w-8"></div>
+        </div>
+        
+        <div id="dm-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+        
+        <div class="p-3 border-t border-zinc-800 bg-zinc-900 pb-safe">
+            <div class="flex gap-2">
+                <input id="dm-input" placeholder="Message..." class="flex-1 bg-zinc-950 text-white rounded-full px-5 py-3 text-sm border border-zinc-800 outline-none focus:border-blue-600 transition-colors" onkeypress="if(event.key==='Enter') App.data.sendDmMessage()">
+                <button onclick="App.data.sendDmMessage()" class="w-12 h-12 bg-blue-600 rounded-full text-white shadow-lg flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/**
+ * PUT ME ON - PROFESSIONAL EDITION v7.4
+ * Updates: My Rotation + Confirmed Anthem Presence
+ */
+
+// ==========================================
+// ADMIN CONFIGURATION
+// ==========================================
+const ADMIN_ACCESS_CODE = "GOTTRUST8991"; // <--- CHANGE THIS TO SET YOUR PASSWORD
+
+const CONFIG = {
+    firebase: {
+        apiKey: "AIzaSyAqFyBcFyeLQwQjTfWpgo8Na9VqEvvEOgw",
+        authDomain: "putmeon-app.firebaseapp.com",
+        databaseURL: "https://putmeon-app-default-rtdb.firebaseio.com",
+        projectId: "putmeon-app",
+        storageBucket: "putmeon-app.firebasestorage.app",
+        messagingSenderId: "511138193782",
+        appId: "1:511138193782:web:9552a25fea51031dce1a57"
+    }
+};
+
+const State = {
+    user: null,
+    song: { id: null, data: null },
+    grading: { scores: { flow:0, beat:0, bars:0, vibe:0, aes:0 }, total: 0 },
+    activeChan: 'rap',
+    viewUid: null,
+    tempImg: null,
+    tempCover: null,
+    selSong: null,
+    favorites: {},
+    authProviderPending: null,
+    votingOpen: true,
+    activeDmUid: null,
+    activeDmChatId: null
+};
+
+const App = {
+    init: function() {
+        firebase.initializeApp(CONFIG.firebase);
+        this.db = firebase.database();
+        this.fbAuth = firebase.auth();
+        
+        this.fbAuth.onAuthStateChanged(u => {
+            if (u) {
+                this.db.ref('users/' + u.uid).on('value', s => {
+                    const v = s.val();
+                    State.user = { 
+                        uid: u.uid, 
+                        email: u.email, 
+                        isAnon: u.isAnonymous, 
+                        ...v 
+                    };
+                    this.ui.enterApp();
+                    // Load notifications on init
+                    App.data.listenNotifications();
+                });
+            } else {
+                State.user = null;
+                this.ui.showSplash();
+            }
+        });
+        
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('header-menu');
+            const btn = document.querySelector('button[onclick="App.ui.toggleHeaderMenu()"]');
+            if (!menu.contains(event.target) && !btn.contains(event.target)) {
+                menu.classList.remove('open');
+            }
+        });
+    },
+
+    auth: {
+        login: function() {
+            const e = document.getElementById('login-email').value;
+            const p = document.getElementById('login-pass').value;
+            if(!e || !p) return App.ui.toast("Please enter email and password", "error");
+            App.fbAuth.signInWithEmailAndPassword(e, p).catch(err => App.ui.toast(err.message, "error"));
+        },
+        register: function() {
+            const h = document.getElementById('reg-handle').value;
+            const e = document.getElementById('reg-email').value;
+            const p = document.getElementById('reg-pass').value;
+            if(!h) return App.ui.toast("Handle required", "error");
+            
+            App.fbAuth.createUserWithEmailAndPassword(e, p).then(cred => {
+                App.db.ref('users/' + cred.user.uid).set({
+                    handle: "@" + h.replace('@',''),
+                    email: e,
+                    bio: "New student.",
+                    avatar: "",
+                    joined: Date.now(),
+                    role: "student",
+                    stats: { totalVotes: 0, totalScoreSum: 0, totalGraded: 0, totalPlugs: 0 }
+                });
+            }).catch(err => App.ui.toast(err.message, "error"));
+        },
+        guest: function() {
+            App.fbAuth.signInAnonymously().catch(err => App.ui.toast(err.message, "error"));
+        },
+        logout: function() {
+            App.fbAuth.signOut().then(() => location.reload());
+        }
+    },
+
+    // ==========================================
+    // NEW: ADMIN MODULE (The Faculty Lounge)
+    // ==========================================
+    admin: {
+        // "The Secret Door" Logic
+        attemptLogin: function() {
+            const code = document.getElementById('admin-code-input').value;
+            if (code === ADMIN_ACCESS_CODE) {
+                if(State.user.isAnon) return App.ui.toast("Guests cannot be Admins.", "error");
+                
+                App.db.ref('users/' + State.user.uid).update({ role: 'admin' }).then(() => {
+                    App.ui.toast("ACCESS GRANTED. Welcome Professor.");
+                    document.getElementById('admin-code-input').value = '';
+                    App.ui.switchTab('show'); // Jump to the podium
+                });
+            } else {
+                App.ui.toast("Access Denied.", "error");
+            }
+        },
+
+        // "The Podium" Logic
+        spinTrack: function() {
+            const artist = document.getElementById('admin-artist').value;
+            const song = document.getElementById('admin-song').value;
+
+            if(!artist || !song) return App.ui.toast("Enter artist and song.", "error");
+
+            const trackId = 'live_' + Date.now();
+            App.db.ref('streamState/nowPlaying').set({
+                id: trackId,
+                artist: artist,
+                song: song,
+                uid: State.user.uid,
+                user: "THE PROFESSOR",
+                timestamp: Date.now()
+            });
+
+            // Also add to history for records
+            App.db.ref('history/' + trackId).set({
+                artist: artist,
+                song: song,
+                score: 0, // Starts at 0, updated later
+                timestamp: Date.now()
+            });
+
+            // Reset Voting
+            App.db.ref('streamState/votingOpen').set(true);
+
+            App.ui.toast("Spinning Track!");
+            document.getElementById('admin-artist').value = '';
+            document.getElementById('admin-song').value = '';
+        },
+
+        toggleVoting: function() {
+            const newState = !State.votingOpen;
+            App.db.ref('streamState/votingOpen').set(newState);
+            App.ui.toast(newState ? "Voting OPEN" : "Voting LOCKED");
+        },
+
+        // "The Gavel" Logic
+        deletePost: function(postId) {
+            if(confirm("Admin: Delete this post permanently?")) {
+                App.db.ref('posts/' + postId).remove();
+                App.ui.toast("Post Deleted.");
+            }
+        }
+    },
+
+    // ==========================================
+    // NEW: SETTINGS MODULE
+    // ==========================================
+    settings: {
+        resetPassword: function() {
+            const email = State.user.email;
+            if(!email || State.user.isAnon) return App.ui.toast("Sign in with email to use this.", "error");
+
+            App.fbAuth.sendPasswordResetEmail(email)
+                .then(() => App.ui.toast("Reset email sent! Check inbox."))
+                .catch(err => App.ui.toast(err.message, "error"));
+        },
+
+        clearCache: function() {
+            if(confirm("This will refresh the app to clear glitches. Continue?")) {
+                window.location.reload(true);
+            }
+        },
+
+        requestNotify: function() {
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notifications");
+            } else if (Notification.permission === "granted") {
+                App.ui.toast("Notifications already enabled.");
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(function (permission) {
+                    if (permission === "granted") {
+                        App.ui.toast("Notifications Enabled!");
+                        new Notification("Put Me On", { body: "You are now connected!" });
+                    }
+                });
+            }
+        }
+    },
+
+    utils: {
+        copyToClip: function(text) {
+            try {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                App.ui.toast("Copied to clipboard");
+            } catch (err) {
+                App.ui.toast("Failed to copy", "error");
+            }
+        },
+        
+        // Helper to get Chat ID between two users
+        getChatId: function(uid1, uid2) {
+            return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+        }
+    },
+
+    ui: {
+        showSplash: function() {
+            document.getElementById('auth-layer').classList.remove('hidden');
+            document.getElementById('app-root').classList.add('hidden');
+        },
+        enterApp: function() {
+            document.getElementById('auth-layer').classList.add('hidden');
+            document.getElementById('app-root').classList.remove('hidden');
+            document.getElementById('app-root').classList.add('flex');
+            
+            this.updateHeader();
+            this.updateProfile();
+            this.checkGuest();
+            this.checkAdmin(); // Check for upgrades
+            
+            App.data.listenLive();
+            App.data.loadChat(State.activeChan);
+            App.data.loadFeed();
+            if(!State.user.isAnon) {
+                App.data.loadCrate();
+                App.data.loadProjects();
+            }
+        },
+        toggleAuth: function(showReg) {
+            document.getElementById('view-auth-login').classList.toggle('hidden', showReg);
+            document.getElementById('view-auth-register').classList.toggle('hidden', !showReg);
+        },
+        switchTab: function(id) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + id).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + id).classList.add('active');
+            
+            if (id === 'settings') {
+                document.getElementById('nav-profile').classList.add('active');
+            }
+            if(id === 'chat') setTimeout(() => document.getElementById('chat-feed').scrollTop = 99999, 50);
+        },
+        subTab: function(subId) {
+            ['stage', 'queue', 'rank'].forEach(k => {
+                document.getElementById('sv-' + k).classList.toggle('hidden', k !== subId);
+                const btn = document.getElementById('sub-' + k);
+                if(k === subId) btn.className = "sub-pill active";
+                else btn.className = "sub-pill";
+            });
+        },
+        setChannel: function(chan) {
+            State.activeChan = chan;
+            document.querySelectorAll('.channel-pill').forEach(b => {
+                b.classList.remove('active');
+            });
+            document.getElementById('ch-' + chan).classList.add('active');
+            App.data.loadChat(chan);
+        },
+        updateHeader: function() {
+            const u = State.user;
+            const img = document.getElementById('header-avatar');
+            const init = document.getElementById('header-init');
+            if(u.avatar) {
+                img.src = u.avatar; img.classList.remove('hidden'); init.classList.add('hidden');
+            } else {
+                img.classList.add('hidden'); init.classList.remove('hidden');
+                init.innerText = u.handle ? u.handle[0].toUpperCase() : '?';
+            }
+        },
+        
+        // NEW: RENDER ROTATION IN PROFILE
+        renderRotation: function(targetId, rotation) {
+            const el = document.getElementById(targetId);
+            el.innerHTML = '';
+            if(!rotation || rotation.length === 0) {
+                el.innerHTML = '<div class="text-[10px] text-zinc-600 italic">No rotation set.</div>';
+                return;
+            }
+            
+            rotation.forEach((item, i) => {
+                if(item && item.trim()) {
+                    const div = document.createElement('div');
+                    div.className = "rotation-item";
+                    div.innerHTML = `<span class="rotation-num">#${i+1}</span> <span>${item}</span>`;
+                    el.appendChild(div);
+                }
+            });
+        },
+
+        updateProfile: function() {
+            const u = State.user;
+            document.getElementById('profile-handle').innerText = u.handle || "Guest";
+            document.getElementById('profile-bio').innerText = u.bio || (u.isAnon ? "Guest Mode" : "No vibe set. Tap edit to update.");
+            
+            // Anthem Logic
+            const ant = document.getElementById('profile-anthem');
+            if(u.anthem) {
+                ant.innerHTML = `<i class="fas fa-music text-blue-500 mr-2"></i><span class="text-blue-400 font-bold text-sm">${u.anthem}</span>`;
+                ant.classList.remove('hidden');
+            } else {
+                ant.classList.add('hidden');
+            }
+            
+            // Rotation Logic
+            App.ui.renderRotation('profile-rotation', u.rotation);
+            
+            const followers = u.followers ? Object.keys(u.followers).length : 0;
+            const following = u.following ? Object.keys(u.following).length : 0;
+            const s = u.stats || {};
+            const graded = s.totalGraded || 0;
+            const plugs = s.totalPlugs || 0;
+            const avg = s.totalVotes ? (s.totalScoreSum / s.totalVotes).toFixed(1) : "0.0";
+
+            let rank = "Freshman";
+            if(followers > 5) rank = "Sophomore";
+            if(followers > 20) rank = "Junior";
+            if(followers > 50) rank = "Senior";
+            if(followers > 100) rank = "Legend";
+            
+            // ADMIN OVERRIDE FOR RANK
+            if (u.role === 'admin') {
+                document.getElementById('profile-rank').innerText = "PROFESSOR";
+                document.getElementById('profile-rank').className = "badge-admin-pill";
+            } else {
+                document.getElementById('profile-rank').innerText = rank;
+                document.getElementById('profile-rank').className = "badge-rank-pill";
+            }
+            
+            document.getElementById('stat-followers').innerText = followers;
+            document.getElementById('stat-following').innerText = following;
+            document.getElementById('stat-avg').innerText = avg;
+            document.getElementById('stat-graded').innerText = graded;
+            document.getElementById('stat-plugs').innerText = plugs;
+
+            const img = document.getElementById('profile-img');
+            const init = document.getElementById('profile-init');
+            if(u.avatar) {
+                img.src = u.avatar; img.classList.remove('hidden'); init.classList.add('hidden');
+            } else {
+                img.classList.add('hidden'); init.classList.remove('hidden');
+                init.innerText = u.handle ? u.handle[0].toUpperCase() : '?';
+            }
+        },
+        checkGuest: function() {
+            if(State.user.isAnon) {
+                document.getElementById('chat-lock').classList.remove('hidden');
+                document.getElementById('social-lock').classList.remove('hidden');
+            } else {
+                document.getElementById('chat-lock').classList.add('hidden');
+                document.getElementById('social-lock').classList.add('hidden');
+            }
+        },
+        // NEW: Check Admin for UI visibility
+        checkAdmin: function() {
+            const isAdmin = State.user && State.user.role === 'admin';
+            const podium = document.getElementById('admin-panel-control');
+            if(isAdmin) {
+                podium.classList.add('visible');
+            } else {
+                podium.classList.remove('visible');
+            }
+        },
+        updateScore: function(cat, val) {
+            State.grading.scores[cat] = parseFloat(val);
+            document.getElementById('val-'+cat).innerText = val;
+            const sum = Object.values(State.grading.scores).reduce((a,b)=>a+b, 0);
+            State.grading.total = Math.round(sum * 2); 
+            document.getElementById('total-score').innerText = State.grading.total;
+        },
+        toast: function(msg, type="success") {
+            const c = document.getElementById('toast-container');
+            const div = document.createElement('div');
+            div.className = `toast-msg ${type}`;
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            div.innerHTML = `<i class=\"fas ${icon}\"></i> <span>${msg}</span>`;
+            c.appendChild(div);
+            setTimeout(() => {
+                div.style.opacity = '0';
+                div.style.transform = 'translateY(-20px)';
+                setTimeout(() => div.remove(), 300);
+            }, 3000);
+        },
+        
+        openEditProfile: function() { 
+            document.getElementById('fs-edit').classList.add('open'); 
+            document.getElementById('edit-handle').value = State.user.handle; 
+            document.getElementById('edit-anthem').value = State.user.anthem || "";
+            document.getElementById('edit-bio').value = State.user.bio; 
+            
+            // Populate Rotation
+            const rot = State.user.rotation || [];
+            for(let i=1; i<=5; i++) {
+                document.getElementById('edit-rot-'+i).value = rot[i-1] || "";
+            }
+        },
+        closeEdit: function() { document.getElementById('fs-edit').classList.remove('open'); },
+        openSearch: function() { document.getElementById('fs-search').classList.add('open'); document.getElementById('modal-search-input').focus(); },
+        closeSearch: function() { document.getElementById('fs-search').classList.remove('open'); },
+        openViewProfile: function() { document.getElementById('fs-view-profile').classList.add('open'); },
+        closeViewProfile: function() { document.getElementById('fs-view-profile').classList.remove('open'); State.viewUid = null; },
+        closeAddList: function() {
+            const m = document.getElementById('modal-add-list');
+            m.style.opacity = '0';
+            setTimeout(() => m.classList.add('hidden'), 300);
+        },
+        toggleHeaderMenu: function() {
+            document.getElementById('header-menu').classList.toggle('open');
+        },
+        openSettings: function() {
+            App.ui.switchTab('settings');
+        },
+        toggleComments: function(postId) {
+            const el = document.getElementById('comments-' + postId);
+            el.classList.toggle('open');
+        },
+        
+        // NEW: NOTIFICATION UI
+        openNotifications: function() {
+            document.getElementById('fs-notifications').classList.add('open');
+            // Clear dot
+            document.getElementById('notif-dot').classList.remove('visible');
+            if(!State.user.isAnon) {
+                App.db.ref(`users/${State.user.uid}/notifications/unread`).set(false);
+            }
+        },
+        closeNotifications: function() { document.getElementById('fs-notifications').classList.remove('open'); },
+        
+        // NEW: INBOX UI
+        openInbox: function() {
+            if(State.user.isAnon) return App.ui.toast("Sign in to check inbox", "error");
+            document.getElementById('fs-inbox').classList.add('open');
+            App.data.loadInbox();
+        },
+        closeInbox: function() { document.getElementById('fs-inbox').classList.remove('open'); },
+        
+        openDmThread: function(recipientName) {
+            document.getElementById('dm-recipient-name').innerText = recipientName;
+            document.getElementById('fs-dm-thread').classList.add('open');
+            setTimeout(() => document.getElementById('dm-messages').scrollTop = 9999, 100);
+        },
+        closeDmThread: function() {
+            document.getElementById('fs-dm-thread').classList.remove('open');
+            State.activeDmUid = null;
+            State.activeDmChatId = null;
+        }
+    },
+
+    data: {
+        listenLive: function() {
+            App.db.ref('streamState/nowPlaying').on('value', s => {
+                const d = s.val();
+                const btn = document.getElementById('live-heart-btn');
+                
+                if (d && d.artist) {
+                    document.getElementById('live-artist').innerText = d.artist;
+                    document.getElementById('live-song').innerText = d.song;
+                    const badge = document.getElementById('live-user-badge');
+                    badge.style.opacity = '1';
+                    
+                    // Show "PROFESSOR" if admin spun it
+                    const isProf = d.user === "THE PROFESSOR";
+                    const badgeColor = isProf ? "bg-yellow-500 text-black" : "bg-zinc-700 text-white";
+                    
+                    badge.innerHTML = `
+                        <div class=\"w-6 h-6 rounded-full ${badgeColor} flex items-center justify-center text-[10px] font-bold\">${d.user.charAt(0)}</div>
+                        <span class=\"text-xs font-bold text-zinc-300 cursor-pointer hover:text-white\" onclick=\"App.data.viewUser('${d.uid}')\">${isProf ? 'Professor Selection' : 'Submitted by ' + d.user}</span>
+                    `;
+                    
+                    State.song = { id: d.id, data: d };
+                    
+                    // Check Heart
+                    const k = `${d.artist}###${d.song}`;
+                    if(State.favorites[k]) btn.classList.add('text-red-500');
+                    else btn.classList.remove('text-red-500');
+                    
+                } else {
+                    document.getElementById('live-artist').innerText = "STANDBY";
+                    document.getElementById('live-song').innerText = "Waiting for class...";
+                    document.getElementById('live-user-badge').style.opacity = '0';
+                    State.song = { id: null, data: null };
+                }
+            });
+
+            App.db.ref('streamState/votingOpen').on('value', s => {
+                const open = s.val();
+                State.votingOpen = open; // Keep local state in sync
+                const voted = JSON.parse(localStorage.getItem('voted') || '[]');
+                const hasVoted = State.song.id && voted.includes(State.song.id);
+                
+                const idle = document.getElementById('grade-idle');
+                const active = document.getElementById('grade-active');
+                const locked = document.getElementById('grade-locked');
+                const lockBtn = document.getElementById('btn-toggle-vote'); // Admin button
+                
+                // Update Admin Button Text
+                if(lockBtn) {
+                    lockBtn.innerText = open ? "Lock Vote" : "Unlock Vote";
+                    lockBtn.className = open ? "px-4 bg-zinc-700 text-white font-bold rounded-lg border border-zinc-600 text-xs uppercase" : "px-4 bg-red-600 text-white font-bold rounded-lg border border-red-500 text-xs uppercase";
+                }
+
+                idle.classList.add('hidden');
+                active.classList.add('hidden');
+                locked.classList.add('hidden');
+                
+                if (open && State.song.id) {
+                    if (hasVoted) {
+                        locked.classList.remove('hidden');
+                    } else {
+                        active.classList.remove('hidden');
+                    }
+                } else {
+                    idle.classList.remove('hidden');
+                }
+            });
+
+            App.db.ref('queue').on('value', s => {
+                const l = document.getElementById('queue-list'); l.innerHTML = '';
+                const v = s.val();
+                if(v) {
+                    Object.values(v).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)).forEach((item, i) => {
+                        const div = document.createElement('div');
+                        div.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center relative overflow-hidden group hover:border-zinc-600 transition-colors";
+                        if(i===0) div.innerHTML += '<div class=\"absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_10px_#22c55e]\"></div>';
+                        
+                        div.innerHTML += `
+                            <div class=\"pl-2 flex-1 min-w-0 mr-2\">
+                                <div class=\"font-bold text-white text-sm text-truncate\">${item.artist}</div>
+                                <div class=\"text-xs text-zinc-500 text-truncate\">${item.song}</div>
+                            </div>
+                            <button onclick=\"App.data.viewUser('${item.uid}')\" class=\"text-[10px] bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 font-bold hover:text-white hover:border-zinc-600 transition-colors shrink-0\">${item.user}</button>
+                        `;
+                        l.appendChild(div);
+                    });
+                } else {
+                    l.innerHTML = '<div class=\"text-center text-zinc-600 text-sm mt-4\">Queue is empty.</div>';
+                }
+            });
+
+            App.db.ref('history').limitToLast(15).on('value', s => {
+                const l = document.getElementById('rank-list'); l.innerHTML = '';
+                const v = s.val();
+                if(v) {
+                    Object.values(v).sort((a,b) => {
+                        const scoreA = parseFloat(a.score) || 0;
+                        const scoreB = parseFloat(b.score) || 0;
+                        return scoreB - scoreA;
+                    }).forEach((item, i) => {
+                        const k = `${item.artist}###${item.song}`;
+                        const likedClass = State.favorites[k] ? 'text-red-500' : 'text-zinc-600';
+                        
+                        // Golden Logic
+                        const isGolden = item.score >= 100;
+                        const goldClass = isGolden ? 'shimmer-gold' : 'text-zinc-700';
+                        const borderClass = isGolden ? 'border-gold' : 'border-zinc-800';
+                        const scoreColor = isGolden ? 'shimmer-gold text-2xl' : 'text-yellow-500 text-xl';
+                        const rowClass = isGolden ? 'golden-row' : '';
+
+                        const div = document.createElement('div');
+                        div.className = `bg-zinc-900 p-3 rounded-2xl border ${borderClass} ${rowClass} flex items-center gap-3 transition-all`;
+                        
+                        const rankHtml = `<div class=\"font-black ${goldClass} text-xl w-8 text-center shrink-0\">#${i+1}</div>`;
+                        
+                        const textHtml = `
+                            <div class=\"flex-1 min-w-0 flex flex-col justify-center\">
+                                <div class=\"font-bold text-white text-sm truncate ${isGolden ? 'text-yellow-100' : ''}\">${item.artist}</div>
+                                <div class=\"text-xs text-zinc-500 truncate\">${item.song}</div>
+                            </div>
+                        `;
+
+                        let scoreHtml = '';
+                        if (isGolden) {
+                            scoreHtml = `
+                                <div class=\"flex flex-col items-end justify-center mr-1 shrink-0\">
+                                    <span class=\"font-black ${scoreColor} leading-none\">${item.score}</span>
+                                    <span class=\"text-[9px] font-black uppercase tracking-widest ${goldClass} mt-0.5\">GOLDEN</span>
+                                </div>
+                            `;
+                        } else {
+                            scoreHtml = `<div class=\"font-black ${scoreColor} text-xl text-right shrink-0 mr-2\">${item.score}</div>`;
+                        }
+
+                        const heartHtml = `
+                            <button onclick=\"App.data.toggleFav('${item.artist}###${item.song}')\" class=\"${likedClass} w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:bg-white/5 active:scale-90 transition-all\">
+                                <i class=\"fas fa-heart text-lg\"></i>
+                            </button>
+                        `;
+
+                        div.innerHTML = rankHtml + textHtml + scoreHtml + heartHtml;
+                        l.appendChild(div);
+                    });
+                }
+            });
+        },
+
+        submitGrade: function() {
+            if(!State.song.id) return;
+            const t = State.grading.total;
+            App.db.ref('votes/' + State.song.id).push({
+                uid: State.user.uid,
+                user: State.user.handle,
+                scores: State.grading.scores,
+                total: t
+            });
+            if(!State.user.isAnon) {
+                App.db.ref('users/'+State.user.uid+'/stats').transaction(s => {
+                    const graded = (s && s.totalGraded ? s.totalGraded : 0) + 1;
+                    return s ? { ...s, totalVotes: (s.totalVotes||0)+1, totalScoreSum: (s.totalScoreSum||0)+t, totalGraded: graded } : { totalVotes: 1, totalScoreSum: t, totalGraded: 1 };
+                });
+            }
+            const v = JSON.parse(localStorage.getItem('voted') || '[]');
+            v.push(State.song.id);
+            localStorage.setItem('voted', JSON.stringify(v));
+            App.ui.toast("Grade Locked In!");
+        },
+
+        addToQueue: function() {
+            const a = document.getElementById('q-artist').value;
+            const s = document.getElementById('q-song').value;
+            if(!a) return App.ui.toast("Artist name required", "error");
+            App.db.ref('queue').push({
+                artist: a, song: s || 'Untitled',
+                uid: State.user.uid, user: State.user.handle,
+                timestamp: Date.now()
+            });
+            if(!State.user.isAnon) {
+                App.db.ref('users/'+State.user.uid+'/stats/totalPlugs').transaction(val => (val || 0) + 1);
+            }
+            document.getElementById('q-artist').value = '';
+            document.getElementById('q-song').value = '';
+            App.ui.toast("Added to Queue");
+        },
+
+        loadChat: function(chan) {
+            if(State.user.isAnon) return document.getElementById('chat-feed').innerHTML = '<div class="text-center text-zinc-600 mt-10">Sign in to join the discussion.</div>';
+            
+            const f = document.getElementById('chat-feed');
+            f.innerHTML = '';
+            
+            App.db.ref('channels/' + chan).limitToLast(50).on('child_added', s => {
+                const m = s.val();
+                const div = document.createElement('div');
+                const isMe = m.uid === State.user.uid;
+                
+                div.className = `chat-row ${isMe ? 'mine' : 'other'}`;
+                
+                let html = '';
+                if(!isMe) {
+                    html += `
+                        <div>
+                            <div class="chat-meta mb-1 cursor-pointer hover:text-white" onclick="App.data.viewUser('${m.uid}')">${m.user}</div>
+                            <div class="chat-bubble">${m.text}</div>
+                        </div>
+                    `;
+                } else {
+                    html += `<div class="chat-bubble">${m.text}</div>`;
+                }
+                
+                div.innerHTML = html;
+                f.appendChild(div);
+                f.scrollTop = f.scrollHeight;
+            });
+        },
+
+        sendChat: function() {
+            const i = document.getElementById('chat-input');
+            const t = i.value.trim();
+            if(!t) return;
+            App.db.ref('channels/' + State.activeChan).push({
+                uid: State.user.uid, user: State.user.handle, text: t, timestamp: Date.now()
+            });
+            i.value = '';
+        },
+
+        loadFeed: function() {
+            if(State.user.isAnon) return document.getElementById('feed-list').innerHTML = '<div class="text-center text-zinc-600 mt-10">Sign in to view feed.</div>';
+            
+            const f = document.getElementById('feed-list');
+            App.db.ref('posts').limitToLast(25).on('value', s => {
+                f.innerHTML = '';
+                const v = s.val();
+                const isAdmin = State.user.role === 'admin'; // Check admin for delete buttons
+
+                if(v) {
+                    Object.keys(v).reverse().forEach(key => {
+                        const p = v[key];
+                        // FEED ITEM CONSTRUCTION
+                        const div = document.createElement('div');
+                        div.className = "bg-zinc-900 p-5 rounded-[24px] border border-zinc-800 mb-4";
+                        
+                        let songHtml = '';
+                        if(p.songAttachment) {
+                            const [artist, title] = p.songAttachment.split('-');
+                            const cleanArtist = artist.trim();
+                            const cleanTitle = title ? title.trim() : 'Track';
+                            const k = `${cleanArtist}###${cleanTitle}`;
+                            const likedClass = State.favorites[k] ? 'text-red-500' : 'text-zinc-600';
+
+                            songHtml = `
+                                <div class="mt-3 bg-zinc-800/50 p-3 rounded-xl border border-zinc-700/50 flex justify-between items-center">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500"><i class="fas fa-music"></i></div>
+                                        <div>
+                                            <div class="text-xs font-bold text-white">${cleanTitle}</div>
+                                            <div class="text-[10px] text-zinc-500">${cleanArtist}</div>
+                                        </div>
+                                    </div>
+                                    <button onclick="App.data.toggleFav('${k}')" class="${likedClass} w-8 h-8 flex items-center justify-center transition-colors"><i class="fas fa-heart"></i></button>
+                                </div>
+                            `;
+                        }
+
+                        // Check Likes
+                        const likes = p.likes ? Object.keys(p.likes).length : 0;
+                        const iLiked = p.likes && p.likes[State.user.uid];
+                        const likeClass = iLiked ? 'liked' : '';
+                        
+                        // Check Comments
+                        const comments = p.comments ? Object.values(p.comments) : [];
+                        const commentCount = comments.length;
+                        
+                        let commentsHtml = '';
+                        comments.forEach(c => {
+                             commentsHtml += `<div class="text-[11px] mb-1"><span class="font-bold text-zinc-400">${c.user}:</span> <span class="text-zinc-500">${c.text}</span></div>`;
+                        });
+
+                        // ADMIN DELETE BUTTON
+                        let deleteBtn = '';
+                        if(isAdmin) {
+                            deleteBtn = `<button onclick="App.admin.deletePost('${key}')" class="post-delete-btn"><i class="fas fa-trash"></i></button>`;
+                        }
+
+                        div.innerHTML = `
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-500 cursor-pointer" onclick="App.data.viewUser('${p.uid}')">${p.user[0]}</div>
+                                <div class="flex-1">
+                                    <div class="font-bold text-sm text-white hover:text-blue-400 cursor-pointer transition-colors" onclick="App.data.viewUser('${p.uid}')">${p.user}</div>
+                                    <div class="text-[10px] text-zinc-600">${new Date(p.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+                                </div>
+                                ${deleteBtn}
+                            </div>
+                            <p class="text-sm text-zinc-300 leading-relaxed mb-3">${p.text}</p>
+                            ${songHtml}
+                            
+                            <!-- ACTION BAR -->
+                            <div class="flex gap-2 mt-4 pt-3 border-t border-zinc-800/50">
+                                <button onclick="App.data.togglePostLike('${key}')" class="post-action-btn ${likeClass}">
+                                    <i class="fas fa-heart"></i> ${likes || ''}
+                                </button>
+                                <button onclick="App.ui.toggleComments('${key}')" class="post-action-btn">
+                                    <i class="fas fa-comment"></i> ${commentCount || ''}
+                                </button>
+                            </div>
+
+                            <!-- COMMENT SECTION -->
+                            <div id="comments-${key}" class="comment-section">
+                                <div class="space-y-2 mb-3 max-h-32 overflow-y-auto">${commentsHtml}</div>
+                                <div class="flex gap-2">
+                                    <input id="inp-cmt-${key}" placeholder="Add comment..." class="flex-1 bg-zinc-950 text-xs text-white px-3 py-2 rounded-lg border border-zinc-800 outline-none focus:border-zinc-700">
+                                    <button onclick="App.data.sendComment('${key}')" class="text-xs font-bold text-blue-500 px-2">Post</button>
+                                </div>
+                            </div>
+                        `;
+                        f.appendChild(div);
+                    });
+                } else {
+                    f.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-8 italic">No vibes yet. Be the first.</div>';
+                }
+            });
+        },
+
+        postFeed: function() {
+            const i = document.getElementById('post-input');
+            const s = document.getElementById('post-song-input');
+            const t = i.value.trim();
+            const song = s.value.trim();
+
+            if(!t && !song) return;
+
+            App.db.ref('posts').push({
+                uid: State.user.uid, 
+                user: State.user.handle, 
+                text: t, 
+                songAttachment: song || null,
+                timestamp: Date.now()
+            });
+            i.value = '';
+            s.value = '';
+            App.ui.toast("Posted to feed");
+        },
+
+        togglePostLike: function(postId) {
+            if(State.user.isAnon) return App.ui.toast("Sign in to like", "error");
+            const ref = App.db.ref(`posts/${postId}/likes/${State.user.uid}`);
+            ref.once('value', s => {
+                if(s.exists()) ref.remove();
+                else {
+                    ref.set(true);
+                    // NEW: SEND NOTIFICATION
+                    App.db.ref(`posts/${postId}`).once('value', snap => {
+                        const p = snap.val();
+                        if(p && p.uid !== State.user.uid) { // Don't notify self
+                            App.data.sendNotification(p.uid, 'like_post', 'liked your vibe.');
+                        }
+                    });
+                }
+            });
+        },
+
+        sendComment: function(postId) {
+             if(State.user.isAnon) return App.ui.toast("Sign in to comment", "error");
+             const inp = document.getElementById('inp-cmt-' + postId);
+             const txt = inp.value.trim();
+             if(!txt) return;
+
+             App.db.ref(`posts/${postId}/comments`).push({
+                 uid: State.user.uid,
+                 user: State.user.handle,
+                 text: txt,
+                 timestamp: Date.now()
+             });
+             inp.value = '';
+        },
+        
+        toggleProjectLike: function(targetUid, listId) {
+            if(State.user.isAnon) return App.ui.toast("Sign in to like", "error");
+            const ref = App.db.ref(`users/${targetUid}/lists/${listId}/likes/${State.user.uid}`);
+            ref.once('value', s => {
+                if(s.exists()) {
+                    ref.remove();
+                    App.ui.toast("Unliked Project");
+                } else {
+                    ref.set(true);
+                    App.ui.toast("Liked Project");
+                    // NEW: SEND NOTIFICATION
+                    if(targetUid !== State.user.uid) {
+                        App.data.sendNotification(targetUid, 'like_proj', 'liked your project.');
+                    }
+                }
+                setTimeout(() => { if(State.viewUid) App.data.viewUser(State.viewUid); }, 200);
+            });
+        },
+
+        searchUsers: function(q, target) {
+            const res = document.getElementById(target);
+            if(q.length < 2) { res.innerHTML = ''; return; }
+            
+            App.db.ref('users').once('value').then(s => {
+                res.innerHTML = '';
+                const all = s.val();
+                Object.keys(all).forEach(uid => {
+                    const u = all[uid];
+                    if(u.handle.toLowerCase().includes(q.toLowerCase())) {
+                        const div = document.createElement('div');
+                        div.className = "flex justify-between items-center bg-zinc-900 p-3 rounded-xl border border-zinc-800";
+                        div.innerHTML = `
+                            <span class="font-bold text-white text-sm">${u.handle}</span>
+                            <button onclick="App.data.viewUser('${uid}')" class="text-[10px] font-bold bg-zinc-800 text-zinc-400 px-3 py-1.5 rounded-full hover:bg-zinc-700 hover:text-white transition-colors">View</button>
+                        `;
+                        res.appendChild(div);
+                    }
+                });
+            });
+        },
+
+        viewUser: function(uid) {
+            State.viewUid = uid;
+            App.ui.openViewProfile();
+            
+            App.db.ref('users/' + uid).once('value').then(s => {
+                const u = s.val();
+                document.getElementById('view-handle').innerText = u.handle;
+                document.getElementById('view-bio').innerText = u.bio || "No bio.";
+                
+                // Anthem
+                const ant = document.getElementById('view-anthem');
+                if(u.anthem) {
+                    ant.innerHTML = `<i class="fas fa-music text-blue-500 mr-2"></i><span class="text-blue-400 font-bold text-sm">${u.anthem}</span>`;
+                    ant.classList.remove('hidden');
+                } else {
+                    ant.classList.add('hidden');
+                }
+                
+                // Rotation
+                App.ui.renderRotation('view-rotation', u.rotation);
+                
+                const img = document.getElementById('view-img');
+                const init = document.getElementById('view-init');
+                if(u.avatar) { img.src = u.avatar; img.classList.remove('hidden'); init.classList.add('hidden'); }
+                else { img.classList.add('hidden'); init.classList.remove('hidden'); init.innerText = u.handle[0]; }
+                
+                if(!State.user.isAnon) {
+                    App.db.ref(`users/${State.user.uid}/following/${uid}`).once('value', snap => {
+                        const btn = document.getElementById('btn-follow');
+                        if(snap.exists()) {
+                            btn.innerText = "Unfollow";
+                            btn.className = "bg-zinc-800 text-white text-xs font-bold px-6 py-2.5 rounded-full border border-zinc-700";
+                        } else {
+                            btn.innerText = "Follow";
+                            btn.className = "bg-blue-600 text-white text-xs font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-900/20";
+                        }
+                    });
+                }
+                
+                document.getElementById('view-followers').innerText = u.followers ? Object.keys(u.followers).length : 0;
+                document.getElementById('view-following').innerText = u.following ? Object.keys(u.following).length : 0;
+
+                const vl = document.getElementById('view-lists');
+                vl.innerHTML = '';
+                if(u.lists) {
+                    Object.keys(u.lists).forEach(listId => {
+                        const l = u.lists[listId];
+                        const likes = l.likes ? Object.keys(l.likes).length : 0;
+                        const iLiked = l.likes && l.likes[State.user.uid];
+                        const likeColor = iLiked ? 'text-red-500' : 'text-zinc-600';
+
+                        vl.innerHTML += `
+                        <div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center text-xs border border-zinc-700/50">
+                            <div>
+                                <div class="font-bold text-white">${l.name}</div>
+                                <div class="text-zinc-500 text-[10px]">${l.songs ? Object.keys(l.songs).length : 0} Songs</div>
+                            </div>
+                            <button onclick="App.data.toggleProjectLike('${uid}', '${listId}')" class="flex items-center gap-1 ${likeColor} hover:text-red-400">
+                                <i class="fas fa-heart"></i> ${likes || ''}
+                            </button>
+                        </div>`;
+                    });
+                } else {
+                    vl.innerHTML = '<div class="text-xs text-zinc-600 italic">No public projects.</div>';
+                }
+
+                const vc = document.getElementById('view-crate');
+                vc.innerHTML = '';
+                App.db.ref(`users/${uid}/favorites`).limitToLast(5).once('value', snap => {
+                    const v = snap.val();
+                    if(v) {
+                        Object.values(v).reverse().forEach(i => {
+                            const k = `${i.artist}###${i.song}`;
+                            vc.innerHTML += `
+                                <div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center border border-zinc-700/50">
+                                    <div class="flex-1 min-w-0 mr-2"><div class="font-bold text-white text-sm text-truncate">${i.artist}</div><div class="text-xs text-zinc-500 text-truncate">${i.song}</div></div>
+                                    <button onclick="App.data.addToFav('${k}')" class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shrink-0"><i class="fas fa-plus"></i></button>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        vc.innerHTML = '<div class="text-xs text-zinc-600 italic">Crate empty.</div>';
+                    }
+                });
+            });
+        },
+
+        toggleFollow: function() {
+            if(State.user.isAnon || !State.viewUid) return;
+            const refMe = App.db.ref(`users/${State.user.uid}/following/${State.viewUid}`);
+            const refThem = App.db.ref(`users/${State.viewUid}/followers/${State.user.uid}`);
+            
+            refMe.once('value', s => {
+                const btn = document.getElementById('btn-follow');
+                if(s.exists()) {
+                    refMe.remove(); refThem.remove();
+                    btn.innerText = "Follow";
+                    btn.className = "bg-blue-600 text-white text-xs font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-900/20";
+                } else {
+                    refMe.set(true); refThem.set(true);
+                    btn.innerText = "Unfollow";
+                    btn.className = "bg-zinc-800 text-white text-xs font-bold px-6 py-2.5 rounded-full border border-zinc-700";
+                    // NEW: SEND NOTIFICATION
+                    App.data.sendNotification(State.viewUid, 'follow', 'started following you.');
+                }
+            });
+        },
+
+        toggleLiveLike: function() {
+            if(State.song.data) {
+                const str = `${State.song.data.artist}###${State.song.data.song}`;
+                App.data.addToFav(str);
+            }
+        },
+
+        addToFav: function(str) {
+            if(State.user.isAnon) return App.ui.toast("Create profile to save", "error");
+            
+            const [a, s] = str.split('###');
+            const k = `${a}###${s}`; 
+            const ref = App.db.ref(`users/${State.user.uid}/favorites/${k.replace(/[.#$/[\]]/g, "_")}`);
+            
+            ref.once('value', snap => {
+                if(snap.exists()) {
+                    ref.remove(); 
+                    if(State.song.data && State.song.data.artist == a && State.song.data.song == s) {
+                        document.getElementById('live-heart-btn').classList.remove('text-red-500');
+                    }
+                    App.ui.toast("Removed from Crate");
+                } else {
+                    ref.set({ artist: a, song: s, addedAt: Date.now() });
+                     if(State.song.data && State.song.data.artist == a && State.song.data.song == s) {
+                        document.getElementById('live-heart-btn').classList.add('text-red-500');
+                    }
+                    App.ui.toast("Saved to Crate");
+                }
+            });
+        },
+
+        loadCrate: function() {
+            App.db.ref(`users/${State.user.uid}/favorites`).on('value', s => {
+                const l = document.getElementById('my-crate'); l.innerHTML = '';
+                const v = s.val();
+                State.favorites = v || {};
+                
+                if(v) {
+                    Object.values(v).reverse().forEach(i => {
+                        const str = `${i.artist}###${i.song}`;
+                        const query = encodeURIComponent(`${i.artist} ${i.song}`);
+                        const div = document.createElement('div');
+                        div.className = "bg-zinc-800/30 p-3 rounded-2xl border border-zinc-700/50 flex justify-between items-center group hover:bg-zinc-800/50 transition-colors";
+                        
+                        div.innerHTML = `
+                            <div class="flex-1 min-w-0 mr-2">
+                                <div class="font-bold text-white text-sm truncate">${i.artist}</div>
+                                <div class="text-xs text-zinc-500 truncate">${i.song}</div>
+                            </div>
+                            <div class="flex gap-1.5">
+                                <button onclick="App.utils.copyToClip('${i.artist} - ${i.song}')" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors"><i class="fas fa-copy text-xs"></i></button>
+                                <button onclick="window.open('https://open.spotify.com/search/${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-800 text-[#1db954] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-spotify"></i></button>
+                                <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-800 text-[#fa2d48] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-apple"></i></button>
+                                <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-800 text-[#ff0000] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-youtube"></i></button>
+                                <button onclick="App.data.openAddListModal('${str}')" class="w-8 h-8 rounded-full bg-zinc-800 text-blue-400 hover:text-white flex items-center justify-center transition-colors"><i class="fas fa-list-ul text-xs"></i></button>
+                            </div>
+                        `;
+                        l.appendChild(div);
+                    });
+                }
+            });
+        },
+
+        createList: function() {
+            const n = prompt("Project Name (e.g., 'Late Night Drives'):");
+            if(n) App.db.ref(`users/${State.user.uid}/lists`).push({ name: n, createdAt: Date.now() });
+        },
+
+        deleteList: function(key) {
+             if(confirm("Delete this project?")) {
+                App.db.ref(`users/${State.user.uid}/lists/${key}`).remove();
+             }
+        },
+
+        loadProjects: function() {
+            App.db.ref(`users/${State.user.uid}/lists`).on('value', s => {
+                const l = document.getElementById('my-projects'); l.innerHTML = '';
+                const v = s.val();
+                if(v) {
+                    Object.keys(v).forEach(k => {
+                        const p = v[k];
+                        const count = p.songs ? Object.keys(p.songs).length : 0;
+                        l.innerHTML += `
+                            <div class="bg-zinc-800/30 p-4 rounded-2xl border border-zinc-700/50 flex justify-between items-center group">
+                                <span class="font-bold text-sm text-white">${p.name}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-zinc-500 bg-zinc-800 px-2 py-1 rounded">${count}</span>
+                                    <button onclick="App.data.deleteList('${k}')" class="w-6 h-6 rounded-full bg-zinc-800 text-zinc-600 hover:text-red-500 flex items-center justify-center transition-colors"><i class="fas fa-trash text-xs"></i></button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            });
+        },
+
+        openAddListModal: function(str) {
+            State.selSong = str;
+            const m = document.getElementById('modal-add-list');
+            const l = document.getElementById('project-select-list');
+            l.innerHTML = '';
+            
+            App.db.ref(`users/${State.user.uid}/lists`).once('value', s => {
+                const v = s.val();
+                if(v) {
+                    Object.keys(v).forEach(k => {
+                        l.innerHTML += `<button onclick="App.data.saveSongToList('${k}')" class="w-full text-left p-4 bg-zinc-800 rounded-2xl hover:bg-zinc-700 mb-2 font-bold text-sm text-zinc-200 transition-colors">${v[k].name}</button>`;
+                    });
+                } else {
+                    l.innerHTML = '<div class="text-zinc-500 text-xs italic text-center py-4">Create a project in your profile first.</div>';
+                }
+                
+                m.classList.remove('hidden');
+                setTimeout(() => m.style.opacity = '1', 10);
+            });
+        },
+
+        saveSongToList: function(listId) {
+            const [a, s] = State.selSong.split('###');
+            App.db.ref(`users/${State.user.uid}/lists/${listId}/songs`).push({ artist: a, song: s });
+            App.ui.closeAddList();
+            App.ui.toast("Added to Project");
+        },
+
+        // REFACTORED: REMOVED TYPE CHECK
+        handleImg: function(input) {
+            if(input.files && input.files[0]) {
+                const r = new FileReader();
+                r.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const c = document.createElement('canvas'), ctx = c.getContext('2d'), M = 600;
+                        let w = img.width, h = img.height;
+                        if(w > h) { if(w > M) { h *= M/w; w = M; } } else { if(h > M) { w *= M/h; h = M; } }
+                        c.width = w; c.height = h; ctx.drawImage(img, 0, 0, w, h);
+                        
+                        // Always avatar now
+                        State.tempImg = c.toDataURL('image/jpeg', 0.85);
+                        document.getElementById('edit-prev').src = State.tempImg;
+                        document.getElementById('edit-prev').classList.remove('hidden');
+                        document.getElementById('edit-ph').classList.add('hidden');
+                    };
+                    img.src = e.target.result;
+                };
+                r.readAsDataURL(input.files[0]);
+            }
+        },
+
+        saveProfile: function() {
+            const h = document.getElementById('edit-handle').value;
+            const a = document.getElementById('edit-anthem').value;
+            const b = document.getElementById('edit-bio').value;
+            
+            // SAVE ROTATION
+            const rotation = [];
+            for(let i=1; i<=5; i++) {
+                const v = document.getElementById('edit-rot-'+i).value.trim();
+                if(v) rotation.push(v);
+            }
+
+            const u = { handle: h, bio: b, anthem: a, rotation: rotation };
+            if(State.tempImg) u.avatar = State.tempImg;
+            
+            App.db.ref('users/' + State.user.uid).update(u).then(() => {
+                App.ui.toast("Profile Updated");
+                App.ui.closeEdit();
+            });
+        },
+        
+        // ==========================================
+        // NEW: NOTIFICATION LOGIC
+        // ==========================================
+        sendNotification: function(targetUid, type, msg) {
+            if(State.user.isAnon) return;
+            App.db.ref(`users/${targetUid}/notifications`).push({
+                fromUid: State.user.uid,
+                fromUser: State.user.handle,
+                type: type,
+                message: msg,
+                timestamp: Date.now()
+            });
+            App.db.ref(`users/${targetUid}/notifications/unread`).set(true);
+        },
+
+        listenNotifications: function() {
+            if(State.user.isAnon) return;
+            
+            // Listen for unread status
+            App.db.ref(`users/${State.user.uid}/notifications/unread`).on('value', s => {
+                const unread = s.val();
+                const dot = document.getElementById('notif-dot');
+                if(unread) dot.classList.add('visible');
+                else dot.classList.remove('visible');
+            });
+
+            // Listen for list
+            App.db.ref(`users/${State.user.uid}/notifications`).limitToLast(20).on('value', s => {
+                const list = document.getElementById('notif-list');
+                list.innerHTML = '';
+                const v = s.val();
+                if(v) {
+                    Object.values(v).reverse().forEach(n => {
+                        if(n === true || n === false) return; // Skip unread flag
+                        
+                        let icon = '<i class="fas fa-bell"></i>';
+                        let color = 'bg-zinc-800';
+                        if(n.type === 'follow') { icon = '<i class="fas fa-user-plus"></i>'; color = 'bg-blue-glass'; }
+                        if(n.type === 'like_post') { icon = '<i class="fas fa-heart"></i>'; color = 'bg-red-glass'; }
+                        if(n.type === 'like_proj') { icon = '<i class="fas fa-list-ul"></i>'; color = 'bg-green-glass'; }
+
+                        list.innerHTML += `
+                            <div class="notif-item" onclick="App.data.viewUser('${n.fromUid}'); App.ui.closeNotifications()">
+                                <div class="notif-icon ${color}">${icon}</div>
+                                <div>
+                                    <div class="text-sm font-bold text-white"><span class="text-blue-400">${n.fromUser}</span> ${n.message}</div>
+                                    <div class="text-[10px] text-zinc-500">${new Date(n.timestamp).toLocaleTimeString()}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    list.innerHTML = '<div class="text-center text-zinc-600 italic py-4">No notifications yet.</div>';
+                }
+            });
+        },
+        
+        // ==========================================
+        // NEW: DM LOGIC
+        // ==========================================
+        openDm: function(otherUid) {
+            if(State.user.isAnon) return App.ui.toast("Sign in to message", "error");
+            if(otherUid === State.user.uid) return App.ui.toast("Cannot message self", "error");
+            
+            State.activeDmUid = otherUid;
+            State.activeDmChatId = App.utils.getChatId(State.user.uid, otherUid);
+            
+            // Get Name
+            App.db.ref('users/' + otherUid + '/handle').once('value', s => {
+                App.ui.openDmThread(s.val() || 'User');
+            });
+            
+            // Close view profile if open
+            App.ui.closeViewProfile();
+            
+            // Listen to messages
+            const msgBox = document.getElementById('dm-messages');
+            msgBox.innerHTML = '';
+            
+            App.db.ref(`messages/${State.activeDmChatId}`).limitToLast(50).on('child_added', s => {
+                if(State.activeDmChatId !== s.ref.parent.key) return; // Prevent bleed
+                
+                const m = s.val();
+                const isMe = m.uid === State.user.uid;
+                const div = document.createElement('div');
+                div.className = `chat-row ${isMe ? 'mine' : 'other'}`;
+                div.innerHTML = `<div class="chat-bubble ${isMe ? 'bg-blue-600' : 'bg-zinc-800'}">${m.text}</div>`;
+                msgBox.appendChild(div);
+                msgBox.scrollTop = msgBox.scrollHeight;
+            });
+        },
+        
+        sendDmMessage: function() {
+            const inp = document.getElementById('dm-input');
+            const txt = inp.value.trim();
+            if(!txt || !State.activeDmChatId) return;
+            
+            const msg = {
+                uid: State.user.uid,
+                text: txt,
+                timestamp: Date.now()
+            };
+            
+            App.db.ref(`messages/${State.activeDmChatId}`).push(msg);
+            
+            // Update "Last Message" for Inbox for BOTH users
+            const update = {
+                chatId: State.activeDmChatId,
+                otherUid: State.activeDmUid, // Note: this logic needs care for both sides
+                lastMsg: txt,
+                timestamp: Date.now()
+            };
+            
+            // For Me
+            App.db.ref(`users/${State.user.uid}/inbox/${State.activeDmChatId}`).set({
+                 withUid: State.activeDmUid,
+                 lastMsg: txt,
+                 timestamp: Date.now()
+            });
+            
+            // For Them
+            App.db.ref(`users/${State.activeDmUid}/inbox/${State.activeDmChatId}`).set({
+                 withUid: State.user.uid,
+                 lastMsg: txt,
+                 timestamp: Date.now()
+            });
+
+            inp.value = '';
+        },
+        
+        loadInbox: function() {
+             const list = document.getElementById('inbox-list');
+             list.innerHTML = '<div class="text-center mt-4"><div class="spinner border-zinc-500"></div></div>';
+             
+             App.db.ref(`users/${State.user.uid}/inbox`).on('value', s => {
+                 list.innerHTML = '';
+                 const v = s.val();
+                 if(v) {
+                     // Sort by time
+                     const threads = Object.values(v).sort((a,b) => b.timestamp - a.timestamp);
+                     
+                     threads.forEach(t => {
+                         // Need to fetch user handle for 'withUid'
+                         // To keep it fast, we might want to store handle in inbox, but for now fetch
+                         App.db.ref(`users/${t.withUid}/handle`).once('value', snap => {
+                             const handle = snap.val() || "User";
+                             const div = document.createElement('div');
+                             div.className = "inbox-item";
+                             div.onclick = () => { App.ui.closeInbox(); App.data.openDm(t.withUid); };
+                             div.innerHTML = `
+                                <div class="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-zinc-500">${handle[0]}</div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between mb-1">
+                                        <div class="font-bold text-white text-sm">${handle}</div>
+                                        <div class="text-[10px] text-zinc-500">${new Date(t.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+                                    </div>
+                                    <div class="text-xs text-zinc-400 truncate">${t.lastMsg}</div>
+                                </div>
+                             `;
+                             list.appendChild(div);
+                         });
+                     });
+                 } else {
+                     list.innerHTML = '<div class="text-center text-zinc-600 italic py-4">No messages.</div>';
+                 }
+             });
+        }
+    }
+};
+
+App.init();
+</script>
+</body>
 </html>
