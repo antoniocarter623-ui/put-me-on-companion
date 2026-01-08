@@ -16,8 +16,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
-    <style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>   
+<style>
         /* =========================================
            1. CORE DESIGN SYSTEM & VARIABLES
            ========================================= */
@@ -481,7 +481,17 @@
         /* =========================================
            8. NEW: SOCIAL BATCH 1 (DM & NOTIFS)
            ========================================= */
-        .red-dot {
+       /* QUIET MODE STYLES */
+    body.quiet-mode .nav-item#nav-feed,
+    body.quiet-mode .nav-item#nav-chat,
+    body.quiet-mode #notif-dot {
+        display: none !important;
+    }
+    body.quiet-mode .view-section#view-feed, 
+    body.quiet-mode .view-section#view-chat {
+        display: none !important;
+    }
+ .red-dot {
             width: 8px; height: 8px;
             background: #ef4444;
             border-radius: 50%;
@@ -537,8 +547,166 @@
         .rotation-num {
             font-weight: 900; color: var(--accent); font-size: 0.7rem; opacity: 0.7;
         }
+/* ========================================= */
+/* PART 2: NEW STYLES FOR GAMIFICATION */
+/* ========================================= */
 
-    </style>
+/* --- 1. BADGES & RANK PILLS --- */
+.badge-rank-pill {
+    background: #27272a;
+    color: #a1a1aa;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+    letter-spacing: 0.05em;
+    border: 1px solid #3f3f46;
+}
+
+/* The shiny silver "Platinum Plaque" badge */
+.badge-platinum {
+    background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+    color: #0f172a;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 0 10px rgba(226, 232, 240, 0.3);
+}
+
+/* The shiny gold "Label Exec" badge */
+.badge-exec {
+    background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+    color: #fbbf24;
+    font-size: 0.65rem;
+    font-weight: 900;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #fbbf24;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
+}
+
+.badge-class-text {
+    font-size: 0.65rem;
+    color: #52525b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-left: auto; /* Pushes it to the right */
+}
+
+/* --- 2. GRADING TOOL SLIDERS (Studio Style) --- */
+.slider-group {
+    margin-bottom: 12px;
+}
+.slider-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Custom styling to make the range input look cool */
+input[type=range].grade-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    background: transparent;
+}
+input[type=range].grade-slider:focus {
+    outline: none;
+}
+/* The Track (The line) */
+input[type=range].grade-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: #27272a;
+    border-radius: 99px;
+}
+/* The Thumb (The circle you drag) */
+input[type=range].grade-slider::-webkit-slider-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    -webkit-appearance: none;
+    margin-top: -6px; /* Centers thumb on track */
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    transition: transform 0.1s ease;
+}
+input[type=range].grade-slider::-webkit-slider-thumb:active {
+    transform: scale(1.2);
+    background: #3b82f6; /* Blue when dragging */
+}
+
+/* --- 3. ANIMATION FOR SLIDE-UP MODAL --- */
+.slide-up-active {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+.slide-up-active #grading-panel {
+    transform: translateY(0) !important;
+}
+/* ========================================= */
+  /* Animation Class for Vibe Match */
+    .active-flex { display: flex !important; opacity: 1 !important; transform: scale(1) !important; } 
+/* PROFESSOR GLOW ANIMATION */
+    @keyframes textGlow {
+        0% { text-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+        50% { text-shadow: 0 0 20px rgba(99, 102, 241, 1), 0 0 30px rgba(99, 102, 241, 0.8); }
+        100% { text-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+    }
+    .prof-glow {
+        animation: textGlow 2s infinite;
+        background: linear-gradient(135deg, #6366f1, #a855f7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 900 !important;
+        letter-spacing: 0.1em;
+    }
+ 
+/* =========================================
+   FIX: LIST POPUP & ANIMATION
+   ========================================= */
+
+/* 1. Force the Search/List Modal to be ON TOP of the Profile */
+#fs-search { 
+    z-index: 9999 !important; /* Super high number ensures it's on top */
+}
+
+/* 2. Make the Profile Modal sit just below it */
+#fs-view-profile { 
+    z-index: 5000 !important; 
+}
+
+/* 3. The "Pop Up" Animation */
+#fs-search.open {
+    /* Overrides the default slide-up with a cool pop effect */
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+
+@keyframes popIn {
+    0% { 
+        opacity: 0; 
+        transform: scale(0.9) translateY(20px); 
+    }
+    100% { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}
+</style>
 </head>
 <body>
 
@@ -574,7 +742,11 @@
                 <button type="button" onclick="App.auth.login()" class="btn-core btn-primary w-full shadow-xl mt-4">
                     Sign In
                 </button>
-                
+                <div class="text-right mt-2">
+    <button type="button" onclick="App.auth.forgotPass()" class="text-xs font-bold text-zinc-500 hover:text-white transition-colors">
+        Forgot Password?
+    </button>
+</div>
                 <div class="flex justify-between items-center mt-6 px-2">
                     <button type="button" onclick="App.ui.toggleAuth(true)" class="text-sm font-bold text-zinc-500 hover:text-white transition-colors">Create Account</button>
                     <button type="button" onclick="App.auth.guest()" class="text-sm font-bold text-blue-500 hover:text-blue-400 transition-colors">Guest Pass</button>
@@ -801,9 +973,14 @@
 
                     <!-- RANK -->
                     <div id="sv-rank" class="hidden">
-                        <div class="text-center mb-6">
-                            <h2 class="text-2xl font-black text-white">Daily Honor Roll</h2>
-                            <p class="text-xs text-zinc-500 mt-1">Top scored tracks from today's class</p>
+                            <div class="flex justify-between items-center mb-6">
+                            <div>
+                                <h2 class="text-2xl font-black text-white">Honor Roll</h2>
+                                <p class="text-xs text-zinc-500">Today's top tracks</p>
+                            </div>
+                            <button onclick="App.ui.openVault()" class="bg-zinc-800 border border-zinc-700 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-zinc-700">
+                                <i class="fas fa-history mr-2"></i>The Vault
+                            </button>
                         </div>
                         <div id="rank-list" class="space-y-3 pb-20"></div>
                     </div>
@@ -878,7 +1055,11 @@
                     <button onclick="App.ui.setChannel('alt')" id="ch-alt" class="channel-pill ch-alt"><i class="fas fa-guitar"></i> Alt/Indie</button>
                     <button onclick="App.ui.setChannel('aux')" id="ch-aux" class="channel-pill ch-aux"><i class="fas fa-plug"></i> The Aux</button>
                 </div>
-
+<div class="px-4 pt-4">
+    <button onclick="App.ui.openSyllabus()" class="w-full bg-zinc-800 border border-zinc-700 hover:bg-zinc-700 text-white text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+        <i class="fas fa-book-open text-blue-400"></i> <span id="class-syl-label">View Class Assignments</span>
+    </button>
+</div>
                 <div id="chat-feed" class="flex-1 overflow-y-auto p-4 flex flex-col pb-24"></div>
 
                 <div class="absolute bottom-[80px] w-full bg-zinc-900 border-t border-zinc-800 p-3 flex gap-2 z-30">
@@ -892,54 +1073,62 @@
                 
                 <div class="profile-container">
                     
-                    <!-- NEW HEADER: SPLIT LAYOUT -->
-                    <div class="profile-header-split">
-                        <!-- Left: Avatar -->
-                        <div class="profile-avatar-box">
-                            <div class="avatar-lg">
-                                <img id="profile-img" class="w-full h-full object-cover hidden">
-                                <div id="profile-init" class="w-full h-full flex items-center justify-center text-5xl font-black text-zinc-700">?</div>
-                            </div>
-                            <!-- Float Edit Button -->
-                            <button onclick="App.ui.openEditProfile()" class="avatar-edit-btn">
-                                <i class="fas fa-pen text-sm"></i>
-                            </button>
-                        </div>
+          <div class="profile-container">
+        
+        <div class="flex items-start gap-6 mb-6">
+            
+            <div class="w-[35%] shrink-0 relative">
+                <div class="aspect-square rounded-2xl overflow-hidden bg-zinc-800 shadow-xl shadow-black/50 border border-zinc-700/50 relative">
+                    <img id="profile-img" class="w-full h-full object-cover hidden" alt="Profile">
+                    <div id="profile-init" class="w-full h-full flex items-center justify-center text-5xl font-black text-zinc-700">?</div>
+                </div>
+                <button onclick="App.ui.openEditProfile()" class="absolute -bottom-2 -right-2 w-10 h-10 bg-blue-600 hover:bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-900/50 transition-all z-10 border-2 border-[#09090b]">
+                    <i class="fas fa-pen text-sm"></i>
+                </button>
+            </div>
 
-                        <!-- Right: Info + Stats -->
-                        <div class="profile-info-box">
-                            <h2 id="profile-handle" class="user-handle-lg">@Guest</h2>
-                            
-                            <div class="user-status-badges">
-                                <div id="profile-rank" class="badge-rank-pill">Freshman</div>
-                                <span class="badge-class-text">Class of '26</span>
-                            </div>
+            <div class="flex-1 min-w-0 pt-1">
+                <h2 id="profile-handle" class="text-2xl font-black text-white mb-2 truncate leading-none">@Guest</h2>
+                
+                <div class="flex flex-wrap gap-2 mb-4 items-center">
+                    <div id="profile-rank" class="badge-rank-pill">Freshman</div>
+                    <div id="badge-container" class="flex gap-1 empty:hidden"></div>
+                    <span id="profile-class-of" class="badge-class-text ml-auto">Class of '26</span>
+                </div>
 
-                            <!-- COMPACT STATS GRID -->
-                            <div class="stats-compact-grid">
-                                <div class="stat-mini-box">
-                                    <div id="stat-followers" class="stat-mini-val">0</div>
-                                    <div class="stat-mini-lbl">Followers</div>
-                                </div>
-                                <div class="stat-mini-box">
-                                    <div id="stat-following" class="stat-mini-val">0</div>
-                                    <div class="stat-mini-lbl">Following</div>
-                                </div>
-                                <div class="stat-mini-box">
-                                    <div id="stat-avg" class="stat-mini-val text-blue-400">0.0</div>
-                                    <div class="stat-mini-lbl">Avg</div>
-                                </div>
-                                <div class="stat-mini-box">
-                                    <div id="stat-graded" class="stat-mini-val">0</div>
-                                    <div class="stat-mini-lbl">Rated</div>
-                                </div>
-                                <div class="stat-mini-box">
-                                    <div id="stat-plugs" class="stat-mini-val">0</div>
-                                    <div class="stat-mini-lbl">Plugs</div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="stats-compact-grid mb-4">
+                    <div class="stat-mini-box border-yellow-500/30 bg-yellow-500/5">
+                        <div id="stat-gpa" class="stat-mini-val text-yellow-500">0.0</div>
+                        <div class="stat-mini-lbl text-yellow-500">GPA</div>
                     </div>
+                    <div class="stat-mini-box bg-yellow-500/5">
+                        <div id="stat-golden" class="stat-mini-val text-yellow-300">0</div>
+                        <div class="stat-mini-lbl text-yellow-600">Golden</div>
+                    </div>
+                    <div class="stat-mini-box">
+                        <div id="stat-graded" class="stat-mini-val">0</div>
+                        <div class="stat-mini-lbl">Graded</div>
+                    </div>
+                    <div class="stat-mini-box cursor-pointer hover:bg-white/10 transition-colors" onclick="App.ui.showFollowList('followers')">
+                        <div id="stat-followers" class="stat-mini-val">0</div>
+                        <div class="stat-mini-lbl">Followers</div>
+                    </div>
+                    <div class="stat-mini-box cursor-pointer hover:bg-white/10 transition-colors" onclick="App.ui.showFollowList('following')">
+                        <div id="stat-following" class="stat-mini-val">0</div>
+                        <div class="stat-mini-lbl">Following</div>
+                    </div>
+                    <div class="stat-mini-box">
+                        <div id="stat-plugs" class="stat-mini-val">0</div>
+                        <div class="stat-mini-lbl">Plugs</div>
+                    </div>
+                </div>
+                
+                <button onclick="App.ui.openReportCard()" class="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 rounded-xl text-xs font-bold text-zinc-300 hover:text-white transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-file-contract text-blue-500"></i> 
+                    <span>View Monthly Report Card</span>
+                </button>
+            </div>
+        </div>
 
                     <!-- DEDICATED BIO BOX -->
                     <div class="bio-box-container">
@@ -965,73 +1154,71 @@
                     </div>
 
                     <!-- My Crate -->
-                    <div class="pb-20">
+                  <div class="pb-20">
                         <h3 class="text-sm font-bold text-red-500 uppercase tracking-widest mb-4 px-1">My Crate</h3>
                         <div id="my-crate" class="space-y-3 pb-10"></div>
                     </div>
 
                 </div>
             </div>
+        </div> <div id="view-settings" class="view-section">
+    <div class="p-6">
+        <h2 class="text-2xl font-black text-white mb-6">Settings</h2>
 
-            <!-- VIEW 5: SETTINGS (UPGRADED) -->
-             <div id="view-settings" class="view-section">
-                <div class="p-6">
-                    <h2 class="text-2xl font-black text-white mb-6">Settings</h2>
-                    
-                    <div class="space-y-4">
-                        <!-- Functional: Notifications -->
-                        <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
-                            <div>
-                                <div class="font-bold text-white">Notifications</div>
-                                <div class="text-[10px] text-zinc-500">Enable browser alerts</div>
-                            </div>
-                            <button onclick="App.settings.requestNotify()" class="bg-zinc-800 p-2 rounded-lg text-zinc-400 hover:text-white transition-colors">
-                                <i class="fas fa-bell"></i>
-                            </button>
-                        </div>
+        <div class="space-y-4">
+            <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
+                <div>
+                    <div class="font-bold text-white">Notifications</div>
+                    <div class="text-[10px] text-zinc-500">Enable browser alerts</div>
+                </div>
+                <button onclick="App.settings.requestNotify()" class="bg-zinc-800 p-2 rounded-lg text-zinc-400 hover:text-white transition-colors">
+                    <i class="fas fa-bell"></i>
+                </button>
+            </div>
 
-                        <!-- Functional: Account Security -->
-                        <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-                             <div class="font-bold text-white mb-2">Account Management</div>
-                             <div class="flex flex-col gap-2">
-                                <button onclick="App.settings.resetPassword()" class="w-full text-left bg-zinc-800/50 p-3 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
-                                    <i class="fas fa-key text-yellow-500"></i> Reset Password via Email
-                                </button>
-                                <button onclick="App.settings.clearCache()" class="w-full text-left bg-zinc-800/50 p-3 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
-                                    <i class="fas fa-sync-alt text-blue-500"></i> Clear Cache / Hard Refresh
-                                </button>
-                             </div>
-                        </div>
+            <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
+                <div>
+                    <div class="font-bold text-white"><i class="fas fa-moon text-purple-500 mr-2"></i>Quiet Mode</div>
+                    <div class="text-[10px] text-zinc-500">Hide chat & feed</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="toggle-quiet" class="sr-only peer" onchange="App.ui.toggleQuiet(this.checked)">
+                    <div class="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+            </div>
 
-                        <!-- General -->
-                        <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-center cursor-pointer" onclick="App.ui.openEditProfile()">
-                            <span class="font-bold text-white">Edit Profile</span>
-                            <i class="fas fa-chevron-right text-zinc-500"></i>
-                        </div>
+            <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 space-y-2">
+                <div class="font-bold text-white mb-2">App Info & Legal</div>
+                
+                <button onclick="App.ui.openFeatures()" class="w-full text-left bg-zinc-800/50 p-3 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+                    <i class="fas fa-star text-yellow-500"></i> App Features & Guide
+                </button>
+                
+                <button onclick="App.ui.openLegal(true)" class="w-full text-left bg-zinc-800/50 p-3 rounded-lg text-xs font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors flex items-center gap-2">
+                    <i class="fas fa-file-contract text-blue-500"></i> Community Guidelines & Terms
+                </button>
+            </div>
 
-                        <!-- THE SECRET DOOR (Faculty Lounge) -->
-                        <div class="mt-8 bg-zinc-950 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
-                            <div class="absolute top-0 right-0 p-2 opacity-10"><i class="fas fa-university text-6xl text-white"></i></div>
-                            <h3 class="text-sm font-black text-white uppercase tracking-widest mb-2">Faculty Access</h3>
-                            <p class="text-xs text-zinc-500 mb-4">Authorized personnel only. Enter access code to upgrade permissions.</p>
-                            
-                            <div class="flex gap-2">
-                                <input id="admin-code-input" type="password" placeholder="Access Code" class="bg-black border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-yellow-600 flex-1">
-                                <button onclick="App.admin.attemptLogin()" class="bg-zinc-800 text-zinc-300 text-xs font-bold px-4 rounded-lg hover:bg-yellow-600 hover:text-black transition-colors">Verify</button>
-                            </div>
-                        </div>
+            <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex justify-between items-center cursor-pointer" onclick="App.ui.openEditProfile()">
+                <span class="font-bold text-white">Edit Profile</span>
+                <i class="fas fa-chevron-right text-zinc-500"></i>
+            </div>
 
-                        <div class="text-center mt-8">
-                            <div class="text-[10px] text-zinc-600 font-mono">v7.4 ROTATION</div>
-                        </div>
-                    </div>
+            <div class="mt-8 bg-zinc-950 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-2 opacity-10"><i class="fas fa-university text-6xl text-white"></i></div>
+                <h3 class="text-sm font-black text-white uppercase tracking-widest mb-2">Faculty Access</h3>
+                <div class="flex gap-2">
+                    <input id="admin-code-input" type="password" placeholder="Access Code" class="bg-black border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-yellow-600 flex-1">
+                    <button onclick="App.admin.attemptLogin()" class="bg-zinc-800 text-zinc-300 text-xs font-bold px-4 rounded-lg hover:bg-yellow-600 hover:text-black transition-colors">Verify</button>
                 </div>
             </div>
 
+            <div class="text-center mt-8 pb-20">
+                <div class="text-[10px] text-zinc-600 font-mono">v7.5 HANDBOOK</div>
+            </div>
         </div>
-
-        <!-- NAV BAR -->
-        <nav class="app-nav">
+    </div>
+    </div> <nav class="app-nav">
             <div onclick="App.ui.switchTab('show')" class="nav-item active" id="nav-show">
                 <i class="fas fa-broadcast-tower"></i><span>Show</span>
             </div>
@@ -1039,7 +1226,7 @@
                 <i class="fas fa-globe"></i><span>Feed</span>
             </div>
             <div onclick="App.ui.switchTab('chat')" class="nav-item" id="nav-chat">
-                <i class="fas fa-comments"></i><span>Chat</span>
+                <i class="fas fa-chalkboard-user"></i><span>Classes</span>
             </div>
             <div onclick="App.ui.switchTab('profile')" class="nav-item" id="nav-profile">
                 <i class="fas fa-user-circle"></i><span>Me</span>
@@ -1053,6 +1240,39 @@
          ========================================= -->
 
     <!-- TOAST -->
+    <div id="fs-features" class="fs-overlay p-6 flex flex-col z-[300]">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-black text-white uppercase italic tracking-tighter">App Features</h2>
+            <button onclick="document.getElementById('fs-features').classList.remove('open')" class="text-zinc-500 font-bold">Close</button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto space-y-6 pb-20">
+            <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800">
+                <div class="w-10 h-10 bg-blue-600/20 text-blue-500 rounded-lg flex items-center justify-center mb-3 text-xl"><i class="fas fa-broadcast-tower"></i></div>
+                <h3 class="text-white font-bold text-lg mb-2">The Live Stage</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">The core of the classroom. When the Professor spins a track, it appears here. You grade it in real-time on 5 criteria: Flow, Production, Lyrics, Vibe, and Aesthetics.</p>
+            </div>
+
+            <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800">
+                <div class="w-10 h-10 bg-purple-600/20 text-purple-500 rounded-lg flex items-center justify-center mb-3 text-xl"><i class="fas fa-graduation-cap"></i></div>
+                <h3 class="text-white font-bold text-lg mb-2">GPA & Rank</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">Your musical taste defines your rank. Grade songs consistently to earn your GPA. Level up from Freshman to Senior, and unlock the "Label Exec" badge by finding Platinum tracks.</p>
+            </div>
+
+            <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800">
+                <div class="w-10 h-10 bg-green-600/20 text-green-500 rounded-lg flex items-center justify-center mb-3 text-xl"><i class="fas fa-link"></i></div>
+                <h3 class="text-white font-bold text-lg mb-2">Vibe Match</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">Visit any student's profile to see your compatibility score. If you both follow each other, you unlock a "Vibe Connection" visual!</p>
+            </div>
+            
+             <div class="bg-zinc-900 p-5 rounded-2xl border border-zinc-800">
+                <div class="w-10 h-10 bg-yellow-600/20 text-yellow-500 rounded-lg flex items-center justify-center mb-3 text-xl"><i class="fas fa-archive"></i></div>
+                <h3 class="text-white font-bold text-lg mb-2">The Crate & Projects</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">Save your favorite tracks to "My Crate". Create custom playlists called "Projects" to share your curation skills with the class.</p>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-container"></div>
 
     <!-- MODAL: EDIT PROFILE (UPDATED) -->
@@ -1114,52 +1334,106 @@
     </div>
 
     <!-- MODAL: VIEW USER (UPDATED) -->
-    <div id="fs-view-profile" class="fs-overlay overflow-y-auto p-6">
-        <div class="flex justify-between items-center mb-6">
-            <button onclick="App.ui.closeViewProfile()" class="w-10 h-10 rounded-full bg-zinc-800 text-white flex items-center justify-center"><i class="fas fa-arrow-left"></i></button>
-            <div class="flex gap-2">
-                <!-- NEW: MESSAGE BUTTON -->
-                <button onclick="App.data.openDm(State.viewUid)" class="bg-zinc-800 text-white text-xs font-bold px-4 py-2.5 rounded-full border border-zinc-700 hover:bg-zinc-700 transition-colors">
-                    <i class="fas fa-envelope mr-1"></i> Message
-                </button>
-                <button id="btn-follow" onclick="App.data.toggleFollow()" class="bg-blue-600 text-white text-xs font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-900/20 active:scale-95 transition-transform">Follow</button>
-            </div>
-        </div>
+ <div id="fs-view-profile" class="fs-overlay overflow-y-auto bg-black">
+        
+        <div class="sticky top-0 z-50 bg-black/80 backdrop-blur-md p-4 flex justify-between items-center border-b border-zinc-800">
+            <button onclick="App.ui.closeViewProfile()" class="w-10 h-10 rounded-full bg-zinc-800 text-white flex items-center justify-center border border-zinc-700"><i class="fas fa-arrow-left"></i></button>
+            <div class="font-bold text-white uppercase tracking-widest text-sm">Student Profile</div>
+            <div class="w-10"></div> </div>
 
-        <div class="flex gap-4 mb-6">
-            <div class="w-24 h-24 rounded-2xl bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700">
-                <img id="view-img" class="w-full h-full object-cover hidden">
-                <div id="view-init" class="w-full h-full flex items-center justify-center text-3xl font-black text-zinc-600">?</div>
-            </div>
-            <div class="flex-1 flex flex-col justify-center">
-                <h1 id="view-handle" class="text-2xl font-black text-white tracking-tight leading-none mb-2">@User</h1>
-                 <div class="flex gap-4">
-                    <div class="text-center"><span id="view-followers" class="font-bold text-white">0</span> <span class="text-zinc-500 text-[9px] uppercase">Followers</span></div>
-                    <div class="text-center"><span id="view-following" class="font-bold text-white">0</span> <span class="text-zinc-500 text-[9px] uppercase">Following</span></div>
+        <div class="profile-container">
+            
+            <div class="profile-header-split">
+                <div class="profile-avatar-box">
+                    <div class="avatar-lg">
+                        <img id="view-img" class="w-full h-full object-cover hidden" alt="Profile">
+                        <div id="view-init" class="w-full h-full flex items-center justify-center text-5xl font-black text-zinc-700">?</div>
+                    </div>
+                </div>
+
+                <div class="profile-info-box">
+                    <h2 id="view-handle" class="user-handle-lg">@User</h2>
+                    
+                    <div class="user-status-badges">
+                        <div id="view-rank" class="badge-rank-pill">Freshman</div>
+                        <span id="view-class-of" class="badge-class-text">Class of '26</span>
+                    </div>
+
+                    <div id="view-vibe-match" class="hidden mb-2 text-[10px] font-bold px-2 py-0.5 bg-zinc-800 rounded text-zinc-400 w-max border border-zinc-700"></div>
+
+                    <div class="flex gap-2 mt-1">
+                        <button id="btn-follow" onclick="App.data.toggleFollow()" class="flex-1 bg-blue-600 text-white text-xs font-bold py-2 rounded-lg shadow-lg shadow-blue-900/20 active:scale-95 transition-transform">Follow</button>
+                        <button onclick="App.data.openDm(State.viewUid)" class="px-4 bg-zinc-800 text-white text-xs font-bold py-2 rounded-lg border border-zinc-700 hover:bg-zinc-700"><i class="fas fa-envelope"></i></button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800 mb-8">
-            <div id="view-anthem" class="mb-3 hidden"></div>
-            <p id="view-bio" class="text-sm text-zinc-400 italic leading-relaxed">...</p>
-            
-            <!-- NEW: VIEW ROTATION -->
-            <div class="mt-6 border-t border-zinc-800 pt-4">
-                <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Heavy Rotation</div>
-                <div id="view-rotation" class="space-y-1.5"></div>
+            <div class="stats-compact-grid">
+                <div class="stat-mini-box border-yellow-500/30 bg-yellow-500/5">
+                    <div id="view-gpa" class="stat-mini-val text-yellow-500">0.0</div>
+                    <div class="stat-mini-lbl text-yellow-500">GPA</div>
+                </div>
+                <div class="stat-mini-box cursor-pointer hover:bg-white/10 transition-colors" onclick="App.ui.showFollowList('followers', State.viewUid)">
+                    <div id="view-followers" class="stat-mini-val">0</div>
+                    <div class="stat-mini-lbl">Followers</div>
+                </div>
+                <div class="stat-mini-box cursor-pointer hover:bg-white/10 transition-colors" onclick="App.ui.showFollowList('following', State.viewUid)">
+                    <div id="view-following" class="stat-mini-val">0</div>
+                    <div class="stat-mini-lbl">Following</div>
+                </div>
             </div>
+
+            <div class="bio-box-container">
+                <div class="bio-label">The Vibe</div>
+                <div id="view-anthem" class="mb-3 hidden"></div>
+                <div id="view-bio" class="bio-content">...</div>
+                
+                <div class="mt-6 border-t border-zinc-800 pt-4">
+                    <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Heavy Rotation</div>
+                    <div id="view-rotation" class="space-y-1.5"></div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-bold text-zinc-500 uppercase tracking-widest mb-4 px-1">Public Projects</h3>
+                <div id="view-lists" class="space-y-3 empty:text-center empty:text-xs empty:text-zinc-600 empty:py-4"></div>
+            </div>
+
+            <div class="pb-20">
+                <h3 class="text-sm font-bold text-red-500 uppercase tracking-widest mb-4 px-1">Favorites</h3>
+                <div id="view-crate" class="space-y-3 pb-10"></div>
+            </div>
+
         </div>
-            
-        <h3 class="text-xs font-bold text-zinc-500 uppercase mb-3">Public Projects</h3>
-        <div id="view-lists" class="space-y-3 mb-8"></div>
-        
-        <h3 class="text-xs font-bold text-zinc-500 uppercase mb-3">Favorites</h3>
-        <div id="view-crate" class="space-y-3 pb-20"></div>
     </div>
 
     <!-- MODAL: ADD TO LIST SELECTOR -->
-    <div id="modal-add-list" class="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
+    <div id="fs-vibe-match" class="fixed inset-0 z-[400] bg-black/90 backdrop-blur-xl hidden flex-col items-center justify-center transition-all duration-500 opacity-0 scale-90">
+        <div class="relative w-full max-w-sm text-center">
+            <div class="absolute inset-0 bg-gradient-to-tr from-blue-600 to-purple-600 blur-[80px] opacity-40 animate-pulse"></div>
+            
+            <h2 class="text-4xl font-black text-white italic uppercase tracking-tighter mb-8 relative z-10 drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                Vibe<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200">Connection!</span>
+            </h2>
+
+            <div class="flex items-center justify-center gap-6 relative z-10 mb-8">
+                <div class="w-24 h-24 rounded-full border-4 border-blue-500 shadow-[0_0_30px_#3b82f6] overflow-hidden">
+                    <img id="vm-my-img" class="w-full h-full object-cover">
+                </div>
+                <div class="text-3xl text-white animate-bounce"><i class="fas fa-link"></i></div>
+                <div class="w-24 h-24 rounded-full border-4 border-purple-500 shadow-[0_0_30px_#a855f7] overflow-hidden">
+                    <img id="vm-their-img" class="w-full h-full object-cover">
+                </div>
+            </div>
+
+            <p class="text-white font-bold text-lg mb-8">You follow each other!</p>
+            
+            <button onclick="document.getElementById('fs-vibe-match').classList.remove('active-flex')" class="bg-white text-black font-black uppercase px-8 py-3 rounded-full hover:scale-105 transition-transform">
+                Let's Work
+            </button>
+        </div>
+    </div>
+<div id="modal-add-list" class="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm hidden items-center justify-center p-6 opacity-0 transition-opacity">
         <div class="bg-[#18181b] w-full max-w-xs rounded-3xl border border-zinc-700 p-6 transform scale-95 transition-transform">
             <h3 class="text-white font-bold text-lg mb-4 text-center">Add to Project</h3>
             <div id="project-select-list" class="flex flex-col gap-2 max-h-60 overflow-y-auto mb-4"></div>
@@ -1175,7 +1449,30 @@
         </div>
         <div id="notif-list" class="space-y-2 pb-20 overflow-y-auto"></div>
     </div>
-    
+    <div id="fs-syllabus" class="fs-overlay p-6 flex flex-col">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-black text-white uppercase">Class Syllabus</h2>
+                <p class="text-xs text-blue-400 font-bold tracking-widest">WEEKLY ASSIGNMENTS</p>
+            </div>
+            <button onclick="App.ui.closeSyllabus()" class="text-zinc-500 font-bold">Close</button>
+        </div>
+        
+        <div id="syllabus-tools" class="hidden mb-6 bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+            <div id="syl-tools-title" class="text-[10px] font-bold text-zinc-500 uppercase mb-2">Professor Tools (Bulk Upload)</div>
+            
+            <div class="mb-2">
+                <p class="text-[10px] text-zinc-400 mb-2">Paste list below (Format: <b>Artist - Song</b>). One per line.</p>
+                <textarea id="syl-bulk" class="w-full bg-black p-3 rounded text-white text-xs border border-zinc-700 outline-none focus:border-blue-500 font-mono" rows="6" placeholder="Drake - God's Plan&#10;Kendrick Lamar - DNA&#10;J. Cole - Middle Child"></textarea>
+            </div>
+            
+            <button onclick="App.data.processBatch()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-widest py-3 rounded shadow-lg transition-transform active:scale-95">
+                <i class="fas fa-layer-group mr-2"></i> Upload Batch
+            </button>
+        </div>
+
+        <div id="syllabus-list" class="space-y-3 overflow-y-auto pb-20"></div>
+    </div>
     <!-- NEW MODAL: INBOX -->
     <div id="fs-inbox" class="fs-overlay p-4">
         <div class="flex items-center justify-between mb-6">
@@ -1183,6 +1480,17 @@
             <button onclick="App.ui.closeInbox()" class="text-zinc-400 font-bold p-2">Close</button>
         </div>
         <div id="inbox-list" class="space-y-2 pb-20 overflow-y-auto"></div>
+    </div>
+
+<div id="fs-vault" class="fs-overlay p-4 flex flex-col">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="flex-1 bg-zinc-900 rounded-xl flex items-center px-4 border border-zinc-800">
+                <i class="fas fa-search text-zinc-500"></i>
+                <input id="vault-search" class="bg-transparent w-full p-4 text-white outline-none" placeholder="Search history..." oninput="App.data.searchVault(this.value)">
+            </div>
+            <button onclick="App.ui.closeVault()" class="text-zinc-400 font-bold p-2">Close</button>
+        </div>
+        <div id="vault-list" class="flex-1 overflow-y-auto space-y-2 pb-20"></div>
     </div>
     
     <!-- NEW MODAL: DM THREAD -->
@@ -1202,7 +1510,191 @@
             </div>
         </div>
     </div>
+<div id="fs-dm-thread" class="fs-overlay flex flex-col h-full bg-black">
+        <div class="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur">
+            <button onclick="App.ui.closeDmThread()" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400"><i class="fas fa-arrow-left"></i></button>
+            <h2 id="dm-recipient-name" class="font-bold text-white">Chat</h2>
+            <div class="w-8"></div>
+        </div>
+        
+        <div id="dm-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+        
+        <div class="p-3 border-t border-zinc-800 bg-zinc-900 pb-safe">
+            <div class="flex gap-2">
+                <input id="dm-input" placeholder="Message..." class="flex-1 bg-zinc-950 text-white rounded-full px-5 py-3 text-sm border border-zinc-800 outline-none focus:border-blue-600 transition-colors" onkeypress="if(event.key==='Enter') App.data.sendDmMessage()">
+                <button onclick="App.data.sendDmMessage()" class="w-12 h-12 bg-blue-600 rounded-full text-white shadow-lg flex items-center justify-center"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
 
+    <div id="fs-report-card" class="fs-overlay p-4 flex flex-col items-center justify-center bg-black/95 z-[300]">
+        <div class="w-full max-w-md bg-[#111] border border-zinc-800 rounded-3xl p-5 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-600 via-purple-600 to-yellow-500"></div>
+            
+            <div class="text-center mb-5 mt-2">
+                 <h2 class="text-2xl font-black text-white uppercase italic tracking-wider">Official Report</h2>
+                 <div id="rc-month-label" class="text-blue-500 font-bold text-xs uppercase tracking-widest">CURRENT MONTH</div>
+            </div>
+
+            <div class="flex justify-around items-center bg-zinc-900/50 p-4 rounded-2xl mb-5 border border-zinc-800/50">
+                <div class="text-center">
+                    <div class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Monthly GPA</div>
+                    <div id="rc-gpa" class="text-4xl font-black text-yellow-500">0.0</div>
+                </div>
+                <div class="h-10 w-px bg-zinc-800"></div>
+                <div class="text-center">
+                    <div class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">New Followers</div>
+                    <div id="rc-followers" class="text-2xl font-black text-white">+0</div>
+                </div>
+                <div class="h-10 w-px bg-zinc-800"></div>
+                 <div class="text-center">
+                    <div class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Crate Adds</div>
+                    <div id="rc-crate" class="text-2xl font-black text-red-500">+0</div>
+                </div>
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <div>
+                    <h3 class="text-[10px] font-bold text-green-500 uppercase tracking-widest mb-1"><i class="fas fa-arrow-up mr-1"></i>Highest Rated</h3>
+                    <div id="rc-high-song" class="bg-zinc-900/80 p-3 rounded-xl border border-green-900/30 flex justify-between items-center">
+                        <span class="text-xs font-bold text-white truncate mr-2">No data yet.</span>
+                        <span class="font-black text-green-400">--</span>
+                    </div>
+                </div>
+                 <div>
+                    <h3 class="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1"><i class="fas fa-arrow-down mr-1"></i>Lowest Rated</h3>
+                    <div id="rc-low-song" class="bg-zinc-900/80 p-3 rounded-xl border border-red-900/30 flex justify-between items-center">
+                        <span class="text-xs font-bold text-white truncate mr-2">No data yet.</span>
+                        <span class="font-black text-red-400">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="document.getElementById('fs-report-card').classList.remove('open')" class="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-bold uppercase rounded-xl transition-colors text-sm">
+                Close Report
+            </button>
+        </div>
+    </div>
+
+    <div id="fs-grading" class="fixed inset-0 z-[250] bg-black/80 backdrop-blur-sm hidden flex-col justify-end opacity-0 transition-opacity">
+        <div class="bg-[#09090b] border-t border-zinc-800 rounded-t-[32px] p-6 pb-safe transform translate-y-full transition-transform duration-300" id="grading-panel">
+            
+            <div class="flex justify-between items-start mb-6">
+                <div class="mr-4">
+                    <div class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">Grading Session</div>
+                    <div id="grade-target-title" class="font-black text-white text-xl leading-tight line-clamp-2">Song Title</div>
+                    <div id="grade-target-artist" class="text-xs font-bold text-zinc-500 truncate mt-1">Artist</div>
+                </div>
+                <div class="flex flex-col items-center shrink-0">
+                     <div id="grade-live-score" class="text-5xl font-black text-white tracking-tighter leading-none">0</div>
+                     <div class="text-[9px] font-bold text-zinc-600 uppercase tracking-widest mt-1">Total</div>
+                </div>
+            </div>
+
+            <div class="space-y-5 mb-8">
+                <div class="slider-group">
+                    <div class="slider-header"><span class="slider-label text-blue-400">Flow & Delivery</span><span id="g-val-flow" class="slider-val">0</span></div>
+                    <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.data.updateFeedGrade('flow', this.value)" class="grade-slider flow">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header"><span class="slider-label text-purple-400">Beat Production</span><span id="g-val-beat" class="slider-val">0</span></div>
+                    <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.data.updateFeedGrade('beat', this.value)" class="grade-slider beat">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header"><span class="slider-label text-red-400">Lyrics & Bars</span><span id="g-val-bars" class="slider-val">0</span></div>
+                    <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.data.updateFeedGrade('bars', this.value)" class="grade-slider bars">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header"><span class="slider-label text-green-400">Originality</span><span id="g-val-vibe" class="slider-val">0</span></div>
+                    <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.data.updateFeedGrade('vibe', this.value)" class="grade-slider vibe">
+                </div>
+                <div class="slider-group">
+                    <div class="slider-header"><span class="slider-label text-yellow-400">Overall Vibe</span><span id="g-val-aes" class="slider-val">0</span></div>
+                    <input type="range" min="0" max="10" step="0.5" value="0" oninput="App.data.updateFeedGrade('aes', this.value)" class="grade-slider aes">
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="App.ui.closeGrading()" class="flex-1 py-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 font-bold transition-colors text-sm">Cancel</button>
+                <button onclick="App.data.submitFinalGrade()" class="flex-[2] py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-wider shadow-lg shadow-blue-900/30 transition-all text-sm">Submit Grade</button>
+            </div>
+        </div>
+    </div>
+<div id="fs-legal" class="fs-overlay flex flex-col z-[9000] bg-black">
+        <div class="p-4 border-b border-zinc-800 bg-zinc-900/95 backdrop-blur-md sticky top-0 z-10 shrink-0">
+            <div class="flex items-center justify-between max-w-2xl mx-auto w-full">
+                <div>
+                    <h2 class="text-xl font-black text-white uppercase italic tracking-tighter">Student Handbook</h2>
+                    <p class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Official Syllabus & Terms v7.5</p>
+                </div>
+                <button id="btn-close-legal" onclick="document.getElementById('fs-legal').classList.remove('open')" class="hidden w-8 h-8 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto bg-black">
+            <div class="p-6 pb-20 max-w-2xl mx-auto space-y-8">
+                
+                <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800 text-center">
+                    <i class="fas fa-university text-3xl text-zinc-600 mb-2"></i>
+                    <h3 class="text-white font-bold text-sm uppercase">Welcome to the Classroom</h3>
+                    <p class="text-xs text-zinc-400 mt-2">
+                        By enrolling in "Put Me On", you agree to abide by the following syllabus. Failure to comply may result in suspension or expulsion (account ban).
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-blue-500 font-black text-sm uppercase border-b border-zinc-800 pb-1">1. Enrollment & Access</h3>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        <strong>1.1 Account Security:</strong> You are responsible for maintaining the confidentiality of your "Student ID" (login credentials). Any activity occurring under your handle is your responsibility.
+                    </p>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        <strong>1.2 Age Requirement:</strong> By clicking agree, you certify that you meet the minimum age requirements for digital consent in your region.
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-red-500 font-black text-sm uppercase border-b border-zinc-800 pb-1">2. Student Code of Conduct</h3>
+                    <ul class="list-disc list-inside text-xs text-zinc-400 space-y-2 pl-2">
+                        <li><strong>Zero Tolerance for Hate:</strong> Racial slurs, homophobia, sexism, or harassment in the Chat or Feed will result in an <span class="text-red-400 font-bold">immediate, permanent ban</span> without appeal.</li>
+                        <li><strong>Academic Integrity:</strong> Do not manipulate the grading system. Spamming "0" (review bombing) or "100" (stat padding) distorts the GPA system and is considered cheating.</li>
+                        <li><strong>Respect the Stage:</strong> Do not spam the feed with unrelated self-promotion. Use the "Projects" feature for your playlists.</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-yellow-500 font-black text-sm uppercase border-b border-zinc-800 pb-1">3. Intellectual Property</h3>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        <strong>3.1 App Ownership:</strong> The "Vibe Check" algorithm, the "Crate" mechanics, and the "Podium" design are the exclusive property of the Developer. You agree NOT to reverse-engineer, clone, or copy this application's source code or concept.
+                    </p>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        <strong>3.2 User Content:</strong> You retain ownership of the lyrics or commentary you post, but you grant "Put Me On" a license to display, grade, and rank this content within the app (e.g., on the Leaderboard).
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-zinc-500 font-black text-sm uppercase border-b border-zinc-800 pb-1">4. Termination & Liability</h3>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        <strong>4.1 Expulsion:</strong> The "Dean" (Admin) reserves the right to terminate access to any user for any reason, primarily for violation of the Code of Conduct.
+                    </p>
+                    <p class="text-xs text-zinc-400 leading-relaxed">
+                        <strong>4.2 As-Is Service:</strong> This app is provided "as is". We are not liable for data loss (e.g., lost playlists) or downtime during maintenance.
+                    </p>
+                </div>
+
+                <div class="pt-8 pb-4">
+                    <button onclick="App.data.acceptTerms()" class="w-full py-4 bg-white hover:bg-zinc-200 text-black font-black uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-transform active:scale-95 text-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-signature"></i> I Agree to All Terms
+                    </button>
+                    <p class="text-[9px] text-zinc-600 text-center mt-3">
+                        This agreement is binding once clicked. Status will be saved to your profile.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
 <script>
 /**
  * PUT ME ON - PROFESSIONAL EDITION v7.4
@@ -1229,6 +1721,7 @@ const CONFIG = {
 const State = {
     user: null,
     song: { id: null, data: null },
+    tempFile: null,
     grading: { scores: { flow:0, beat:0, bars:0, vibe:0, aes:0 }, total: 0 },
     activeChan: 'rap',
     viewUid: null,
@@ -1239,7 +1732,9 @@ const State = {
     authProviderPending: null,
     votingOpen: true,
     activeDmUid: null,
-    activeDmChatId: null
+    activeDmChatId: null,
+    activePostId: null, 
+    feedGrades: { flow:0, beat:0, bars:0, vibe:0, aes:0 }
 };
 
 const App = {
@@ -1259,8 +1754,13 @@ const App = {
                         ...v 
                     };
                     this.ui.enterApp();
+App.data.listenAnnouncements();
                     // Load notifications on init
                     App.data.listenNotifications();
+if (!State.user.isAnon && !v.termsAgreed) {
+    App.ui.openLegal(false);
+    App.ui.switchTab('settings');
+}
                 });
             } else {
                 State.user = null;
@@ -1283,6 +1783,13 @@ const App = {
             const p = document.getElementById('login-pass').value;
             if(!e || !p) return App.ui.toast("Please enter email and password", "error");
             App.fbAuth.signInWithEmailAndPassword(e, p).catch(err => App.ui.toast(err.message, "error"));
+        },
+        forgotPass: function() {
+            const e = document.getElementById('login-email').value;
+            if(!e) return App.ui.toast("Enter email address first", "error");
+            firebase.auth().sendPasswordResetEmail(e)
+                .then(() => App.ui.toast("Reset link sent to " + e))
+                .catch(err => App.ui.toast(err.message, "error"));
         },
         register: function() {
             const h = document.getElementById('reg-handle').value;
@@ -1434,7 +1941,98 @@ const App = {
         }
     },
 
-    ui: {
+ui: {
+openFeatures: function() {
+    document.getElementById('fs-features').classList.add('open');
+},
+openLegal: function(isVoluntary) {
+    const modal = document.getElementById('fs-legal');
+    const closeBtn = document.getElementById('btn-close-legal');
+    modal.classList.add('open');
+    if(isVoluntary) {
+        closeBtn.classList.remove('hidden');
+    } else {
+        closeBtn.classList.add('hidden');
+    }
+},
+        // --- PASTE NEW FUNCTIONS HERE ---
+        
+        openReportCard: function() {
+            document.getElementById('fs-report-card').classList.add('open');
+            if(App.data.generateReportCard) App.data.generateReportCard();
+        },
+
+        openGrading: function(postId, songTitle, artistName) {
+            State.activePostId = postId;
+            ['flow','beat','bars','vibe','aes'].forEach(k => {
+                document.getElementById('g-val-'+k).innerText = '0';
+                const input = document.querySelector(`.grade-slider.${k}`);
+                if(input) input.value = 0;
+            });
+            State.feedGrades = { flow:0, beat:0, bars:0, vibe:0, aes:0 };
+            document.getElementById('grade-live-score').innerText = '0';
+            document.getElementById('grade-target-title').innerText = songTitle;
+            document.getElementById('grade-target-artist').innerText = artistName || 'Artist';
+            
+            const el = document.getElementById('fs-grading');
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('slide-up-active'), 10);
+        },
+
+        closeGrading: function() {
+            const el = document.getElementById('fs-grading');
+            el.classList.remove('slide-up-active'); 
+            setTimeout(() => {
+                el.classList.add('hidden'); 
+                State.activePostId = null;
+            }, 300); 
+        },
+
+      showFollowList: function(type, targetUid) {
+             const uid = targetUid || State.user.uid;
+             const title = type === 'followers' ? 'Followers' : 'Following';
+             
+             // Reuse Search Modal for List View
+             const modal = document.getElementById('fs-search');
+             const input = document.getElementById('modal-search-input');
+             const res = document.getElementById('modal-search-results');
+             
+             modal.classList.add('open');
+             input.classList.add('hidden'); // Hide search bar
+             res.innerHTML = '<div class="spinner border-zinc-500 mx-auto mt-10"></div>';
+             
+             // Fetch List
+             App.db.ref(`users/${uid}/${type}`).once('value', s => {
+                 const list = s.val();
+                 res.innerHTML = `<h3 class="text-white font-bold text-lg mb-4 px-2">${title}</h3>`;
+                 
+                 if(list) {
+                     Object.keys(list).forEach(uId => {
+                         App.db.ref('users/' + uId).once('value', snap => {
+                             const u = snap.val();
+                             if(u) {
+                                 const div = document.createElement('div');
+                                 div.className = "flex justify-between items-center bg-zinc-900 p-3 rounded-xl border border-zinc-800 mb-2";
+                                 div.innerHTML = `
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-xs text-zinc-500">${u.handle[0]}</div>
+                                        <span class="font-bold text-white text-sm">${u.handle}</span>
+                                    </div>
+                                    <button onclick="App.data.viewUser('${uId}'); App.ui.closeSearch()" class="text-[10px] font-bold bg-zinc-800 text-zinc-400 px-3 py-1.5 rounded-full hover:bg-zinc-700 hover:text-white transition-colors">View</button>
+                                 `;
+                                 res.appendChild(div);
+                             }
+                         });
+                     });
+                 } else {
+                     res.innerHTML += '<div class="text-zinc-500 italic px-2">List is empty.</div>';
+                 }
+             });
+        },
+        // --- YOUR EXISTING FUNCTIONS SIT BELOW HERE ---
+        // renderRotation: function...
+        // toast: function...
+        // etc...
         showSplash: function() {
             document.getElementById('auth-layer').classList.remove('hidden');
             document.getElementById('app-root').classList.add('hidden');
@@ -1461,6 +2059,17 @@ const App = {
             document.getElementById('view-auth-login').classList.toggle('hidden', showReg);
             document.getElementById('view-auth-register').classList.toggle('hidden', !showReg);
         },
+toggleQuiet: function(active) {
+        if(active) {
+            document.body.classList.add('quiet-mode');
+            App.ui.toast("Quiet Mode On");
+            // If we are currently on chat or feed, force switch to show
+            App.ui.switchTab('show');
+        } else {
+            document.body.classList.remove('quiet-mode');
+            App.ui.toast("Quiet Mode Off");
+        }
+    },
         switchTab: function(id) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + id).classList.add('active');
@@ -1519,12 +2128,25 @@ const App = {
             });
         },
 
-        updateProfile: function() {
+updateProfile: function() {
             const u = State.user;
+            if (!u) return; // Safety check
+
+            // 1. Handle & Bio
             document.getElementById('profile-handle').innerText = u.handle || "Guest";
             document.getElementById('profile-bio').innerText = u.bio || (u.isAnon ? "Guest Mode" : "No vibe set. Tap edit to update.");
             
-            // Anthem Logic
+            // 2. NEW: Dynamic "Class Of" Date
+            // Takes the 'joined' timestamp and formats it like "Jan '26"
+            const joinedDate = new Date(u.joined || Date.now());
+            const month = joinedDate.toLocaleString('default', { month: 'short' }); // e.g. "Jan"
+            const year = joinedDate.getFullYear().toString().substr(-2); // e.g. "26"
+            const classText = document.getElementById('profile-class-of');
+            if(classText) {
+                classText.innerText = `Class of ${month} '${year}`;
+            }
+
+            // 3. Anthem Logic
             const ant = document.getElementById('profile-anthem');
             if(u.anthem) {
                 ant.innerHTML = `<i class="fas fa-music text-blue-500 mr-2"></i><span class="text-blue-400 font-bold text-sm">${u.anthem}</span>`;
@@ -1533,9 +2155,10 @@ const App = {
                 ant.classList.add('hidden');
             }
             
-            // Rotation Logic
+            // 4. Rotation Logic
             App.ui.renderRotation('profile-rotation', u.rotation);
             
+            // 5. Update Stats Numbers
             const followers = u.followers ? Object.keys(u.followers).length : 0;
             const following = u.following ? Object.keys(u.following).length : 0;
             const s = u.stats || {};
@@ -1543,13 +2166,19 @@ const App = {
             const plugs = s.totalPlugs || 0;
             const avg = s.totalVotes ? (s.totalScoreSum / s.totalVotes).toFixed(1) : "0.0";
 
+            document.getElementById('stat-followers').innerText = followers;
+            document.getElementById('stat-following').innerText = following;
+            document.getElementById('stat-graded').innerText = graded;
+            document.getElementById('stat-plugs').innerText = plugs;
+
+            // 6. Rank Logic
             let rank = "Freshman";
             if(followers > 5) rank = "Sophomore";
             if(followers > 20) rank = "Junior";
             if(followers > 50) rank = "Senior";
             if(followers > 100) rank = "Legend";
             
-            // ADMIN OVERRIDE FOR RANK
+            // Admin Override
             if (u.role === 'admin') {
                 document.getElementById('profile-rank').innerText = "PROFESSOR";
                 document.getElementById('profile-rank').className = "badge-admin-pill";
@@ -1557,22 +2186,26 @@ const App = {
                 document.getElementById('profile-rank').innerText = rank;
                 document.getElementById('profile-rank').className = "badge-rank-pill";
             }
-            
-            document.getElementById('stat-followers').innerText = followers;
-            document.getElementById('stat-following').innerText = following;
-            document.getElementById('stat-avg').innerText = avg;
-            document.getElementById('stat-graded').innerText = graded;
-            document.getElementById('stat-plugs').innerText = plugs;
 
+            // 7. AVATAR FIX (The Lapse Fix)
+            // We run this last to ensure everything else loaded first
             const img = document.getElementById('profile-img');
             const init = document.getElementById('profile-init');
+            
             if(u.avatar) {
-                img.src = u.avatar; img.classList.remove('hidden'); init.classList.add('hidden');
+                img.src = u.avatar; 
+                img.classList.remove('hidden'); // Force show image
+                init.classList.add('hidden');   // Hide initials
             } else {
-                img.classList.add('hidden'); init.classList.remove('hidden');
+                img.classList.add('hidden'); 
+                init.classList.remove('hidden');
                 init.innerText = u.handle ? u.handle[0].toUpperCase() : '?';
             }
-        },
+            
+            // 8. Calculate Gamification Stats (GPA/Badges)
+            App.data.calculateStats();
+        },            
+      
         checkGuest: function() {
             if(State.user.isAnon) {
                 document.getElementById('chat-lock').classList.remove('hidden');
@@ -1625,8 +2258,8 @@ const App = {
                 document.getElementById('edit-rot-'+i).value = rot[i-1] || "";
             }
         },
-        closeEdit: function() { document.getElementById('fs-edit').classList.remove('open'); },
-        openSearch: function() { document.getElementById('fs-search').classList.add('open'); document.getElementById('modal-search-input').focus(); },
+       closeEdit: function() { document.getElementById('fs-edit').classList.remove('open'); },
+        openSearch: function() { document.getElementById('fs-search').classList.add('open'); document.getElementById('modal-search-input').classList.remove('hidden'); document.getElementById('modal-search-results').innerHTML=''; document.getElementById('modal-search-input').focus(); },
         closeSearch: function() { document.getElementById('fs-search').classList.remove('open'); },
         openViewProfile: function() { document.getElementById('fs-view-profile').classList.add('open'); },
         closeViewProfile: function() { document.getElementById('fs-view-profile').classList.remove('open'); State.viewUid = null; },
@@ -1664,7 +2297,13 @@ const App = {
             App.data.loadInbox();
         },
         closeInbox: function() { document.getElementById('fs-inbox').classList.remove('open'); },
-        
+openSyllabus: function() { 
+        document.getElementById('fs-syllabus').classList.add('open'); 
+        App.data.loadSyllabus(); 
+    },
+    closeSyllabus: function() { document.getElementById('fs-syllabus').classList.remove('open'); },
+        openVault: function() { document.getElementById('fs-vault').classList.add('open'); },
+    closeVault: function() { document.getElementById('fs-vault').classList.remove('open'); },
         openDmThread: function(recipientName) {
             document.getElementById('dm-recipient-name').innerText = recipientName;
             document.getElementById('fs-dm-thread').classList.add('open');
@@ -1678,6 +2317,159 @@ const App = {
     },
 
     data: {
+acceptTerms: function() {
+    if(State.user.isAnon) {
+        document.getElementById('fs-legal').classList.remove('open');
+        return;
+    }
+    App.db.ref('users/' + State.user.uid).update({ 
+        termsAgreed: true 
+    }).then(() => {
+        App.ui.toast("Welcome to Class!");
+        document.getElementById('fs-legal').classList.remove('open');
+    });
+},
+// =========================================
+        // NEW: GAMIFICATION LOGIC (Paste at top of App.data)
+        // =========================================
+
+        // 1. Calculate GPA, Badges, and "Class Of"
+        calculateStats: function() {
+            const uid = State.viewUid || State.user.uid;
+            const isMe = (uid === State.user.uid);
+            
+            // Fetch all posts by this user to find graded songs
+            App.db.ref('posts').orderByChild('uid').equalTo(uid).once('value', s => {
+                let totalScore = 0, count = 0, perfect = 0, platinumCount = 0;
+                const posts = s.val();
+                
+                if(posts) {
+                    Object.values(posts).forEach(p => {
+                        if(p.grades) {
+                            const grades = Object.values(p.grades);
+                            const avg = grades.reduce((a,b)=>a+b,0) / grades.length;
+                            
+                            totalScore += avg;
+                            count++;
+                            
+                            // "Golden" is a perfect score (or near perfect)
+                            if(avg >= 98) perfect++; 
+                            // "Platinum Plaque" is average over 90
+                            if(avg >= 90) platinumCount++;
+                        }
+                    });
+                }
+                
+                const gpa = count > 0 ? (totalScore / count).toFixed(1) : "0.0";
+                
+                // --- UPDATE THE PROFILE UI ---
+                if(document.getElementById('stat-gpa')) document.getElementById('stat-gpa').innerText = gpa;
+                if(document.getElementById('stat-golden')) document.getElementById('stat-golden').innerText = perfect;
+                if(document.getElementById('rc-gpa')) document.getElementById('rc-gpa').innerText = gpa;
+                
+                // RENDER BADGES (Plaques)
+                const bc = document.getElementById('badge-container');
+                if(bc) {
+                    bc.innerHTML = '';
+                    // Add 1 Platinum Icon for every 90+ song
+                    for(let i=0; i<platinumCount; i++) {
+                        bc.innerHTML += `<div class="badge-platinum"><i class="fas fa-compact-disc"></i></div>`;
+                    }
+                    // Add Label Exec Badge if 5+ plaques
+                    if(platinumCount >= 5) {
+                        bc.innerHTML += `<div class="badge-exec"><i class="fas fa-crown"></i> LABEL EXEC</div>`;
+                    }
+                }
+
+                // SAVE TO DATABASE (Only if it's my own profile)
+                if(isMe) {
+                    App.db.ref(`users/${uid}/stats`).update({ 
+                        gpa: gpa, 
+                        totalGraded: count, 
+                        golden: perfect, 
+                        platinum: platinumCount 
+                    });
+                }
+            });
+        },
+
+        // 2. Update Live Score while Sliding (The Math)
+        updateFeedGrade: function(cat, val) {
+            State.feedGrades[cat] = parseFloat(val);
+            document.getElementById('g-val-'+cat).innerText = val;
+            
+            // Math: 5 categories * 10 points = 50 max. Multiply by 2 for 100 scale.
+            const sum = Object.values(State.feedGrades).reduce((a,b)=>a+b, 0);
+            const total = Math.round(sum * 2);
+            
+            // Update the big number
+            const scoreEl = document.getElementById('grade-live-score');
+            scoreEl.innerText = total;
+            
+            // Change color based on score
+            if(total >= 90) scoreEl.className = "text-5xl font-black text-yellow-400 tracking-tighter leading-none";
+            else if(total >= 80) scoreEl.className = "text-5xl font-black text-green-400 tracking-tighter leading-none";
+            else scoreEl.className = "text-5xl font-black text-white tracking-tighter leading-none";
+        },
+
+        // 3. Submit the Final Grade to Database
+        submitFinalGrade: function() {
+            if(!State.activePostId) return;
+            const score = parseInt(document.getElementById('grade-live-score').innerText);
+            const uid = State.user.uid;
+            
+            // Save: posts -> POST_ID -> grades -> USER_ID = 85
+            App.db.ref(`posts/${State.activePostId}/grades/${uid}`).set(score).then(() => {
+                App.ui.toast("Grade Submitted! Class Dismissed.");
+                App.ui.closeGrading();
+            });
+        },
+        
+        // 4. Generate Monthly Report Card Data
+        generateReportCard: function() {
+            const uid = State.user.uid; 
+            
+            // Set Month Label
+            const date = new Date();
+            const monthNames = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+            document.getElementById('rc-month-label').innerText = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+            
+            // Fetch Data
+            App.db.ref('posts').orderByChild('uid').equalTo(uid).once('value', s => {
+                const posts = s.val();
+                let songs = [];
+                
+                if(posts) {
+                    Object.values(posts).forEach(p => {
+                        if(p.songAttachment && p.grades) {
+                            const g = Object.values(p.grades);
+                            const avg = Math.round(g.reduce((a,b)=>a+b,0)/g.length);
+                            songs.push({ title: p.songAttachment, score: avg });
+                        }
+                    });
+                }
+                
+                // Sort by Score (Highest to Lowest)
+                songs.sort((a,b) => b.score - a.score);
+                
+                // Display Highest
+                const highEl = document.getElementById('rc-high-song');
+                if(songs.length > 0) {
+                    highEl.innerHTML = `<span class="text-xs font-bold text-white truncate mr-2">${songs[0].title}</span><span class="font-black text-green-400">${songs[0].score}</span>`;
+                } else {
+                    highEl.innerHTML = `<span class="text-xs font-bold text-zinc-500">No grades yet.</span>`;
+                }
+                
+                // Display Lowest
+                const lowEl = document.getElementById('rc-low-song');
+                if(songs.length > 0) {
+                    const worst = songs[songs.length-1];
+                    lowEl.innerHTML = `<span class="text-xs font-bold text-white truncate mr-2">${worst.title}</span><span class="font-black text-red-400">${worst.score}</span>`;
+                } else {
+                    lowEl.innerHTML = `<span class="text-xs font-bold text-zinc-500">--</span>`;
+                }
+            });
+        },
         listenLive: function() {
             App.db.ref('streamState/nowPlaying').on('value', s => {
                 const d = s.val();
@@ -1811,9 +2603,9 @@ const App = {
                             scoreHtml = `<div class=\"font-black ${scoreColor} text-xl text-right shrink-0 mr-2\">${item.score}</div>`;
                         }
 
-                        const heartHtml = `
-                            <button onclick=\"App.data.toggleFav('${item.artist}###${item.song}')\" class=\"${likedClass} w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:bg-white/5 active:scale-90 transition-all\">
-                                <i class=\"fas fa-heart text-lg\"></i>
+                      const heartHtml = `
+                            <button onclick="App.data.addToFav('${item.artist}###${item.song}', this)" class="${likedClass} w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:bg-white/5 active:scale-90 transition-all">
+                                <i class="fas fa-heart text-lg"></i>
                             </button>
                         `;
 
@@ -1920,26 +2712,47 @@ const App = {
                         div.className = "bg-zinc-900 p-5 rounded-[24px] border border-zinc-800 mb-4";
                         
                         let songHtml = '';
-                        if(p.songAttachment) {
-                            const [artist, title] = p.songAttachment.split('-');
-                            const cleanArtist = artist.trim();
-                            const cleanTitle = title ? title.trim() : 'Track';
-                            const k = `${cleanArtist}###${cleanTitle}`;
-                            const likedClass = State.favorites[k] ? 'text-red-500' : 'text-zinc-600';
+                       // --- REPLACE THE OLD IF(p.songAttachment) BLOCK WITH THIS ---
+                    if(p.songAttachment) {
+                        const parts = p.songAttachment.split('-');
+                        const artist = parts[0].trim();
+                        const title = parts[1] ? parts[1].trim() : 'Track';
+                        const k = `${artist}###${title}`;
+                        const likedClass = State.favorites[k] ? 'text-red-500' : 'text-zinc-600';
+                        
+                        // LOGIC: Show "Grade" button only if it's NOT my song
+                        const isMine = (p.uid === State.user.uid);
+                        const gradeBtn = !isMine ? 
+                            `<button onclick="App.ui.openGrading('${key}', '${title}', '${artist}')" class="bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:border-blue-500 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-2"><i class="fas fa-sliders-h"></i> GRADE</button>` 
+                            : `<span class="text-[9px] text-zinc-600 font-bold border border-zinc-800 bg-zinc-900 px-2 py-1 rounded">YOUR TRACK</span>`;
 
-                            songHtml = `
-                                <div class="mt-3 bg-zinc-800/50 p-3 rounded-xl border border-zinc-700/50 flex justify-between items-center">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500"><i class="fas fa-music"></i></div>
-                                        <div>
-                                            <div class="text-xs font-bold text-white">${cleanTitle}</div>
-                                            <div class="text-[10px] text-zinc-500">${cleanArtist}</div>
+                       // The Player UI
+                        const query = encodeURIComponent(`${artist} ${title}`);
+                        songHtml = `
+                            <div class="mt-3 bg-[#111] p-3 rounded-xl border border-zinc-800">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="flex items-center gap-3 min-w-0 flex-1">
+                                        <div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-500 shrink-0"><i class="fas fa-music"></i></div>
+                                        <div class="min-w-0">
+                                            <div class="text-xs font-bold text-white truncate">${title}</div>
+                                            <div class="text-[10px] text-zinc-500 truncate">${artist}</div>
                                         </div>
                                     </div>
-                                    <button onclick="App.data.toggleFav('${k}')" class="${likedClass} w-8 h-8 flex items-center justify-center transition-colors"><i class="fas fa-heart"></i></button>
+                                    <div class="flex flex-col items-end gap-2">
+                                        ${gradeBtn}
+                                        <button onclick="App.data.addToFav('${k}', this)" class="${likedClass} text-xs transition-colors"><i class="fas fa-heart"></i></button>
+                                    </div>
                                 </div>
-                            `;
-                        }
+                                
+                                <div class="flex gap-2 border-t border-zinc-800 pt-2">
+                                    <button onclick="window.open('https://open.spotify.com/search/$$${query}', '_blank')" class="flex-1 bg-zinc-900 py-2 rounded text-[#1db954] font-bold text-[10px] hover:bg-zinc-800"><i class="fab fa-spotify mr-1"></i> Spotify</button>
+                                    <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="flex-1 bg-zinc-900 py-2 rounded text-[#fa2d48] font-bold text-[10px] hover:bg-zinc-800"><i class="fab fa-apple mr-1"></i> Apple</button>
+                                    <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="flex-1 bg-zinc-900 py-2 rounded text-[#ff0000] font-bold text-[10px] hover:bg-zinc-800"><i class="fab fa-youtube mr-1"></i> YouTube</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    // --- END OF REPLACEMENT ---
 
                         // Check Likes
                         const likes = p.likes ? Object.keys(p.likes).length : 0;
@@ -1996,6 +2809,131 @@ const App = {
                     });
                 } else {
                     f.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-8 italic">No vibes yet. Be the first.</div>';
+                }
+            });
+        },
+
+// NEW: CLASS SYLLABUS LOGIC (Pro Edition)
+        loadSyllabus: function() {
+            const list = document.getElementById('syllabus-list');
+            const tools = document.getElementById('syllabus-tools');
+            const toolsTitle = document.getElementById('syl-tools-title');
+            
+            list.innerHTML = '<div class="spinner border-zinc-500 mx-auto"></div>';
+            
+            // 1. Permission Check
+            const isAux = State.activeChan === 'aux';
+            const isAdmin = State.user && State.user.role === 'admin';
+            
+            if (isAdmin || (isAux && !State.user.isAnon)) {
+                tools.classList.remove('hidden');
+                toolsTitle.innerText = isAux ? "Student Aux Cord (Drop a Track)" : "Professor Tools (Rapid Entry)";
+            } else {
+                tools.classList.add('hidden');
+            }
+
+            // 2. Load Syllabus
+            const classId = State.activeChan; 
+            
+            App.db.ref('syllabus/' + classId).limitToLast(50).on('value', s => {
+                list.innerHTML = '';
+                const v = s.val();
+                if(v) {
+                    Object.values(v).reverse().forEach(i => {
+                        // Generate Search Links
+                        const query = encodeURIComponent(i.artist + ' ' + i.song);
+                        const favKey = `${i.artist}###${i.song}`;
+                        
+                        // Check if I already liked this (Heart Status)
+                        const isLiked = State.favorites && State.favorites[favKey];
+                        const heartColor = isLiked ? 'text-red-500' : 'text-zinc-600 hover:text-red-400';
+                        
+                        const div = document.createElement('div');
+                        // Style: Yellow for Aux, Blue-Gray for Class
+                        const borderClass = isAux ? 'border-yellow-500' : 'border-zinc-600';
+                        
+                        div.className = `bg-zinc-900 p-4 rounded-xl border-l-4 ${borderClass} relative overflow-hidden flex flex-col gap-3`;
+                        
+                        div.innerHTML = `
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <div class="font-black text-lg text-white uppercase italic leading-none mb-1">${i.artist}</div>
+                                    <div class="text-sm text-blue-400 font-bold">"${i.song}"</div>
+                                </div>
+                                <button onclick="App.data.addToFav('${favKey}')" class="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center ${heartColor} transition-colors shadow-lg">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-[9px] bg-zinc-800 text-zinc-500 px-2 py-1 rounded font-bold uppercase tracking-wider">${isAux ? 'Aux Pick' : 'Required Listening'}</span>
+                                
+                                <div class="flex gap-2">
+                                    <button onclick="window.open('https://open.spotify.com/search/$${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#1db954] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-spotify"></i></button>
+                                    <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#fa2d48] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-apple"></i></button>
+                                    <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#ff0000] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-youtube"></i></button>
+                                </div>
+                            </div>
+                        `;
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = '<div class="text-center text-zinc-500 italic mt-10">No assignments yet.</div>';
+                }
+            });
+        },
+
+     // NEW: BATCH UPLOAD LOGIC
+        processBatch: function() {
+            const raw = document.getElementById('syl-bulk').value;
+            if(!raw.trim()) return App.ui.toast("Box is empty", "error");
+
+            const isAux = State.activeChan === 'aux';
+            const isAdmin = State.user && State.user.role === 'admin';
+            if(!isAdmin && !isAux) return App.ui.toast("Permission Denied", "error");
+
+            // 1. Split the text into separate lines
+            const lines = raw.split('\n');
+            let count = 0;
+
+            lines.forEach(line => {
+                // 2. Look for the hyphen "-" to separate Artist from Song
+                if(line.includes('-')) {
+                    // Split "Drake - God's Plan" into ["Drake ", " God's Plan"]
+                    const parts = line.split('-');
+                    
+                    // The first part is Artist, the rest is Song (joined back just in case title has a hyphen)
+                    const a = parts[0].trim();
+                    const s = parts.slice(1).join('-').trim();
+
+                    if(a && s) {
+                        App.db.ref('syllabus/' + State.activeChan).push({ 
+                            artist: a, 
+                            song: s, 
+                            link: "", // Batch mode skips links for speed
+                            postedBy: State.user.handle, 
+                            timestamp: Date.now() 
+                        });
+                        count++;
+                    }
+                }
+            });
+
+            if(count > 0) {
+                App.ui.toast(`Successfully uploaded ${count} songs!`);
+                document.getElementById('syl-bulk').value = ''; // Clear box
+        } else {
+                App.ui.toast("No valid 'Artist - Song' lines found", "error");
+            }
+        },
+
+        // This was missing from your code, causing a crash on load
+        listenAnnouncements: function() {
+            App.db.ref('announcements').on('value', s => {
+                const a = s.val();
+                // Only show if timestamp is recent (last 60 seconds) so old ones don't pop up on reload
+                if(a && (Date.now() - a.timestamp < 60000)) { 
+                    App.ui.toast(a.msg);
                 }
             });
         },
@@ -2094,32 +3032,117 @@ const App = {
             });
         },
 
-        viewUser: function(uid) {
+viewUser: function(uid) {
             State.viewUid = uid;
             App.ui.openViewProfile();
-            
+
+            // PREPARE VIBE MATCH DATA
+            const myFavs = State.favorites ? Object.values(State.favorites).map(f => f.artist + ' - ' + f.song) : [];
+
             App.db.ref('users/' + uid).once('value').then(s => {
                 const u = s.val();
+                
+                // 1. Basic Info
                 document.getElementById('view-handle').innerText = u.handle;
                 document.getElementById('view-bio').innerText = u.bio || "No bio.";
                 
-                // Anthem
-                const ant = document.getElementById('view-anthem');
-                if(u.anthem) {
-                    ant.innerHTML = `<i class="fas fa-music text-blue-500 mr-2"></i><span class="text-blue-400 font-bold text-sm">${u.anthem}</span>`;
-                    ant.classList.remove('hidden');
-                } else {
-                    ant.classList.add('hidden');
+                // 2. NEW: "Class Of" Logic for View Profile
+                // We inject this dynamically into the handle area
+                const joinedDate = new Date(u.joined || Date.now());
+                const month = joinedDate.toLocaleString('default', { month: 'short' });
+                const year = joinedDate.getFullYear().toString().substr(-2);
+                const classText = `<div class="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Class of ${month} '${year}</div>`;
+                
+                // Clear previous injections to prevent duplicates
+                const handleEl = document.getElementById('view-handle');
+                if(handleEl.nextElementSibling && handleEl.nextElementSibling.classList.contains('view-class-tag')) {
+                    handleEl.nextElementSibling.remove();
                 }
-                
-                // Rotation
-                App.ui.renderRotation('view-rotation', u.rotation);
-                
+                handleEl.insertAdjacentHTML('afterend', `<div class="view-class-tag">${classText}</div>`);
+
+                // 3. Vibe Match Logic
+                if(!State.user.isAnon && uid !== State.user.uid) {
+                    const theirFavs = u.favorites ? Object.values(u.favorites).map(f => f.artist + ' - ' + f.song) : [];
+                    let matches = 0;
+                    theirFavs.forEach(song => { if(myFavs.includes(song)) matches++; });
+
+                    let pct = 0;
+                    if(myFavs.length > 0 && theirFavs.length > 0) {
+                        pct = Math.round((matches / Math.max(myFavs.length, theirFavs.length)) * 100);
+                    }
+                    const vm = document.getElementById('view-vibe-match');
+                    vm.innerText = `🎵 ${pct}% Vibe Match`;
+                    vm.classList.remove('hidden');
+                }
+
+                // 4. Avatar
                 const img = document.getElementById('view-img');
                 const init = document.getElementById('view-init');
                 if(u.avatar) { img.src = u.avatar; img.classList.remove('hidden'); init.classList.add('hidden'); }
                 else { img.classList.add('hidden'); init.classList.remove('hidden'); init.innerText = u.handle[0]; }
+
+                // 5. Stats (Followers/Following) - FIX: Make them Clickable
+                const followers = u.followers ? Object.keys(u.followers).length : 0;
+                const following = u.following ? Object.keys(u.following).length : 0;
                 
+                const fEl = document.getElementById('view-followers');
+                const pEl = document.getElementById('view-following');
+                
+                fEl.innerHTML = `${followers}`; 
+                pEl.innerHTML = `${following}`;
+                
+                // Add Click Listeners for Lists
+                fEl.parentElement.onclick = function() { App.ui.showFollowList('followers', uid); };
+                pEl.parentElement.onclick = function() { App.ui.showFollowList('following', uid); };
+
+                // 6. Rank & GPA Calculation
+                App.db.ref('posts').orderByChild('uid').equalTo(uid).once('value', snap => {
+                    let totalScore = 0, count = 0;
+                    const posts = snap.val();
+                    if(posts) {
+                        Object.values(posts).forEach(p => {
+                            if(p.grades) {
+                                const grades = Object.values(p.grades);
+                                totalScore += grades.reduce((a,b)=>a+b,0) / grades.length;
+                                count++;
+                            }
+                        });
+                    }
+                    const gpa = count > 0 ? (totalScore / count).toFixed(1) : "0.0";
+                    
+                    let rank = "Freshman";
+                    if(followers > 5) rank = "Sophomore";
+                    if(followers > 20) rank = "Junior";
+                    if(followers > 50) rank = "Senior";
+                    if(followers > 100) rank = "Legend";
+                    if(u.role === 'admin') rank = "PROFESSOR";
+
+                    const badgeColor = u.role === 'admin' ? 'background:linear-gradient(135deg, #6366f1, #4f46e5); color:white;' : 'background:#27272a; color:#a1a1aa; border:1px solid #3f3f46;';
+                    
+                    // Inject stats bar
+                    const statsHtml = `
+                        <div class="view-stats-bar flex items-center gap-2 mt-2 mb-4">
+                            <div style="${badgeColor} padding:4px 10px; border-radius:100px; font-size:0.65rem; font-weight:800; text-transform:uppercase;">${rank}</div>
+                            <div class="bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 px-3 py-1 rounded-full text-xs font-black">GPA: ${gpa}</div>
+                        </div>
+                    `;
+                    
+                    // Clean up old injection
+                    const oldStats = document.querySelector('.view-stats-bar');
+                    if(oldStats) oldStats.remove();
+                    
+                    document.querySelector('.view-class-tag').insertAdjacentHTML('afterend', statsHtml);
+                });
+
+                // 7. Anthem & Rotation
+                App.ui.renderRotation('view-rotation', u.rotation);
+                const ant = document.getElementById('view-anthem');
+                if(u.anthem) {
+                    ant.innerHTML = `<i class="fas fa-music text-blue-500 mr-2"></i><span class="text-blue-400 font-bold text-sm">${u.anthem}</span>`;
+                    ant.classList.remove('hidden');
+                } else { ant.classList.add('hidden'); }
+                
+                // 8. Follow Button Logic
                 if(!State.user.isAnon) {
                     App.db.ref(`users/${State.user.uid}/following/${uid}`).once('value', snap => {
                         const btn = document.getElementById('btn-follow');
@@ -2132,56 +3155,29 @@ const App = {
                         }
                     });
                 }
-                
-                document.getElementById('view-followers').innerText = u.followers ? Object.keys(u.followers).length : 0;
-                document.getElementById('view-following').innerText = u.following ? Object.keys(u.following).length : 0;
 
-                const vl = document.getElementById('view-lists');
-                vl.innerHTML = '';
+                // 9. Load Lists (Projects & Crate)
+                // ... (Existing list loading code remains similar, keeping it brief for copy/paste) ...
+                const vl = document.getElementById('view-lists'); vl.innerHTML = '';
                 if(u.lists) {
                     Object.keys(u.lists).forEach(listId => {
                         const l = u.lists[listId];
-                        const likes = l.likes ? Object.keys(l.likes).length : 0;
-                        const iLiked = l.likes && l.likes[State.user.uid];
-                        const likeColor = iLiked ? 'text-red-500' : 'text-zinc-600';
-
-                        vl.innerHTML += `
-                        <div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center text-xs border border-zinc-700/50">
-                            <div>
-                                <div class="font-bold text-white">${l.name}</div>
-                                <div class="text-zinc-500 text-[10px]">${l.songs ? Object.keys(l.songs).length : 0} Songs</div>
-                            </div>
-                            <button onclick="App.data.toggleProjectLike('${uid}', '${listId}')" class="flex items-center gap-1 ${likeColor} hover:text-red-400">
-                                <i class="fas fa-heart"></i> ${likes || ''}
-                            </button>
-                        </div>`;
+                        vl.innerHTML += `<div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center text-xs border border-zinc-700/50 mb-2"><div><div class="font-bold text-white">${l.name}</div><div class="text-zinc-500 text-[10px]">${l.songs ? Object.keys(l.songs).length : 0} Songs</div></div></div>`;
                     });
-                } else {
-                    vl.innerHTML = '<div class="text-xs text-zinc-600 italic">No public projects.</div>';
-                }
+                } else { vl.innerHTML = '<div class="text-xs text-zinc-600 italic">No public projects.</div>'; }
 
-                const vc = document.getElementById('view-crate');
-                vc.innerHTML = '';
+                const vc = document.getElementById('view-crate'); vc.innerHTML = '';
                 App.db.ref(`users/${uid}/favorites`).limitToLast(5).once('value', snap => {
                     const v = snap.val();
                     if(v) {
                         Object.values(v).reverse().forEach(i => {
-                            const k = `${i.artist}###${i.song}`;
-                            vc.innerHTML += `
-                                <div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center border border-zinc-700/50">
-                                    <div class="flex-1 min-w-0 mr-2"><div class="font-bold text-white text-sm text-truncate">${i.artist}</div><div class="text-xs text-zinc-500 text-truncate">${i.song}</div></div>
-                                    <button onclick="App.data.addToFav('${k}')" class="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white transition-colors shrink-0"><i class="fas fa-plus"></i></button>
-                                </div>
-                            `;
+                            vc.innerHTML += `<div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center border border-zinc-700/50 mb-2"><div class="flex-1 min-w-0 mr-2"><div class="font-bold text-white text-sm text-truncate">${i.artist}</div><div class="text-xs text-zinc-500 text-truncate">${i.song}</div></div></div>`;
                         });
-                    } else {
-                        vc.innerHTML = '<div class="text-xs text-zinc-600 italic">Crate empty.</div>';
-                    }
+                    } else { vc.innerHTML = '<div class="text-xs text-zinc-600 italic">Crate empty.</div>'; }
                 });
             });
         },
-
-        toggleFollow: function() {
+                      toggleFollow: function() {
             if(State.user.isAnon || !State.viewUid) return;
             const refMe = App.db.ref(`users/${State.user.uid}/following/${State.viewUid}`);
             const refThem = App.db.ref(`users/${State.viewUid}/followers/${State.user.uid}`);
@@ -2189,15 +3185,42 @@ const App = {
             refMe.once('value', s => {
                 const btn = document.getElementById('btn-follow');
                 if(s.exists()) {
+                    // Unfollow
                     refMe.remove(); refThem.remove();
                     btn.innerText = "Follow";
                     btn.className = "bg-blue-600 text-white text-xs font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-900/20";
                 } else {
+                    // Follow
                     refMe.set(true); refThem.set(true);
                     btn.innerText = "Unfollow";
                     btn.className = "bg-zinc-800 text-white text-xs font-bold px-6 py-2.5 rounded-full border border-zinc-700";
-                    // NEW: SEND NOTIFICATION
+                    
                     App.data.sendNotification(State.viewUid, 'follow', 'started following you.');
+                    
+                    // CHECK MUTUAL FOLLOW (VIBE CONNECTION)
+                    App.db.ref(`users/${State.user.uid}/followers/${State.viewUid}`).once('value', mutualSnap => {
+                        if(mutualSnap.exists()) {
+                            // THEY ALREADY FOLLOW ME! IT'S A MATCH!
+                            const modal = document.getElementById('fs-vibe-match');
+                            const myImg = document.getElementById('vm-my-img');
+                            const theirImg = document.getElementById('vm-their-img');
+                            
+                            // Set Avatars
+                            myImg.src = State.user.avatar || 'https://via.placeholder.com/150';
+                            
+                            // Get their avatar
+                            App.db.ref(`users/${State.viewUid}/avatar`).once('value', avSnap => {
+                                theirImg.src = avSnap.val() || 'https://via.placeholder.com/150';
+                                modal.classList.add('active-flex');
+                                
+                                // Play a sound if you want, or just celebrate visual
+                                setTimeout(() => {
+                                    // Auto close after 3 seconds
+                                    modal.classList.remove('active-flex');
+                                }, 4000);
+                            });
+                        }
+                    });
                 }
             });
         },
@@ -2209,31 +3232,59 @@ const App = {
             }
         },
 
-        addToFav: function(str) {
+    addToFav: function(str, btnElement) {
             if(State.user.isAnon) return App.ui.toast("Create profile to save", "error");
             
             const [a, s] = str.split('###');
             const k = `${a}###${s}`; 
-            const ref = App.db.ref(`users/${State.user.uid}/favorites/${k.replace(/[.#$/[\]]/g, "_")}`);
+            const dbKey = k.replace(/[.#$/[\]]/g, "_");
+            const ref = App.db.ref(`users/${State.user.uid}/favorites/${dbKey}`);
             
+            // 1. UPDATE UI IMMEDIATELY (Force the visual change)
+            if(btnElement) {
+                // If it HAS the class, we are removing it. If it DOES NOT, we are adding it.
+                const isRed = btnElement.classList.contains('text-red-500');
+                if(isRed) {
+                    btnElement.classList.remove('text-red-500');
+                    btnElement.classList.add('text-zinc-600');
+                } else {
+                    btnElement.classList.remove('text-zinc-600');
+                    btnElement.classList.add('text-red-500');
+                }
+                // Animation Pop
+                btnElement.style.transform = "scale(1.3)";
+                setTimeout(() => btnElement.style.transform = "scale(1)", 200);
+            }
+
+            // 2. UPDATE DATABASE
             ref.once('value', snap => {
                 if(snap.exists()) {
                     ref.remove(); 
+                    // Update Local State so it remembers even if you scroll away
+                    if(State.favorites) delete State.favorites[k]; 
+                    
+                    // Update Main Player Heart if match
                     if(State.song.data && State.song.data.artist == a && State.song.data.song == s) {
-                        document.getElementById('live-heart-btn').classList.remove('text-red-500');
+                        const mainBtn = document.getElementById('live-heart-btn');
+                        if(mainBtn) mainBtn.classList.remove('text-red-500');
                     }
                     App.ui.toast("Removed from Crate");
                 } else {
                     ref.set({ artist: a, song: s, addedAt: Date.now() });
-                     if(State.song.data && State.song.data.artist == a && State.song.data.song == s) {
-                        document.getElementById('live-heart-btn').classList.add('text-red-500');
+                    // Update Local State
+                    if(!State.favorites) State.favorites = {};
+                    State.favorites[k] = { artist: a, song: s }; 
+                    
+                    if(State.song.data && State.song.data.artist == a && State.song.data.song == s) {
+                        const mainBtn = document.getElementById('live-heart-btn');
+                        if(mainBtn) mainBtn.classList.add('text-red-500');
                     }
                     App.ui.toast("Saved to Crate");
                 }
             });
         },
 
-        loadCrate: function() {
+       loadCrate: function() {
             App.db.ref(`users/${State.user.uid}/favorites`).on('value', s => {
                 const l = document.getElementById('my-crate'); l.innerHTML = '';
                 const v = s.val();
@@ -2241,26 +3292,37 @@ const App = {
                 
                 if(v) {
                     Object.values(v).reverse().forEach(i => {
-                        const str = `${i.artist}###${i.song}`;
+                        // FIX: Define the variables correctly for Crate
+                        const favKey = `${i.artist}###${i.song}`;
                         const query = encodeURIComponent(`${i.artist} ${i.song}`);
-                        const div = document.createElement('div');
-                        div.className = "bg-zinc-800/30 p-3 rounded-2xl border border-zinc-700/50 flex justify-between items-center group hover:bg-zinc-800/50 transition-colors";
+                        const heartColor = 'text-red-500'; // Always red in crate because it IS the favorites list
                         
-                        div.innerHTML = `
+                        const div = document.createElement('div');
+                        div.className = "bg-zinc-800/30 p-3 rounded-2xl border border-zinc-700/50 flex justify-between items-center group hover:bg-zinc-800/50 transition-colors mb-2";
+                        
+                       div.innerHTML = `
                             <div class="flex-1 min-w-0 mr-2">
-                                <div class="font-bold text-white text-sm truncate">${i.artist}</div>
-                                <div class="text-xs text-zinc-500 truncate">${i.song}</div>
-                            </div>
-                            <div class="flex gap-1.5">
-                                <button onclick="App.utils.copyToClip('${i.artist} - ${i.song}')" class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors"><i class="fas fa-copy text-xs"></i></button>
-                                <button onclick="window.open('https://open.spotify.com/search/${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-800 text-[#1db954] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-spotify"></i></button>
-                                <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-800 text-[#fa2d48] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-apple"></i></button>
-                                <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-800 text-[#ff0000] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-youtube"></i></button>
-                                <button onclick="App.data.openAddListModal('${str}')" class="w-8 h-8 rounded-full bg-zinc-800 text-blue-400 hover:text-white flex items-center justify-center transition-colors"><i class="fas fa-list-ul text-xs"></i></button>
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div class="font-black text-lg text-white uppercase italic leading-none mb-1 text-truncate">${i.artist}</div>
+                                        <div class="text-sm text-blue-400 font-bold text-truncate">"${i.song}"</div>
+                                    </div>
+                                    <button onclick="App.data.addToFav('${favKey}', this)" class="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center ${heartColor} transition-colors shadow-lg shrink-0 ml-2">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                </div>
+
+                                <div class="flex items-center justify-end mt-3 pt-3 border-t border-zinc-800/50 gap-2">
+                                    <button onclick="window.open('https://open.spotify.com/search/$${query}', '_blank')" class="bg-zinc-950 text-[#1db954] px-3 py-1 rounded text-[10px] font-bold hover:bg-white hover:text-black transition-colors"><i class="fab fa-spotify mr-1"></i> Spot</button>
+                                    <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="bg-zinc-950 text-[#fa2d48] px-3 py-1 rounded text-[10px] font-bold hover:bg-white hover:text-black transition-colors"><i class="fab fa-apple mr-1"></i> Apple</button>
+                                    <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="bg-zinc-950 text-[#ff0000] px-3 py-1 rounded text-[10px] font-bold hover:bg-white hover:text-black transition-colors"><i class="fab fa-youtube mr-1"></i> Tube</button>
+                                </div>
                             </div>
                         `;
                         l.appendChild(div);
                     });
+                } else {
+                     l.innerHTML = '<div class="text-center text-zinc-600 italic py-4">Crate is empty.</div>';
                 }
             });
         },
@@ -2327,48 +3389,84 @@ const App = {
         },
 
         // REFACTORED: REMOVED TYPE CHECK
+      // NEW: Handles the image selection
         handleImg: function(input) {
             if(input.files && input.files[0]) {
-                const r = new FileReader();
-                r.onload = e => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const c = document.createElement('canvas'), ctx = c.getContext('2d'), M = 600;
-                        let w = img.width, h = img.height;
-                        if(w > h) { if(w > M) { h *= M/w; w = M; } } else { if(h > M) { w *= M/h; h = M; } }
-                        c.width = w; c.height = h; ctx.drawImage(img, 0, 0, w, h);
-                        
-                        // Always avatar now
-                        State.tempImg = c.toDataURL('image/jpeg', 0.85);
-                        document.getElementById('edit-prev').src = State.tempImg;
-                        document.getElementById('edit-prev').classList.remove('hidden');
-                        document.getElementById('edit-ph').classList.add('hidden');
-                    };
-                    img.src = e.target.result;
+                const file = input.files[0];
+                State.tempFile = file; // Store the actual file to upload later
+
+                // Show a preview immediately
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('edit-prev').src = e.target.result;
+                    document.getElementById('edit-prev').classList.remove('hidden');
+                    document.getElementById('edit-ph').classList.add('hidden');
                 };
-                r.readAsDataURL(input.files[0]);
+                reader.readAsDataURL(file);
             }
         },
 
+        // NEW: Uploads the file to Storage, then saves the profile
         saveProfile: function() {
             const h = document.getElementById('edit-handle').value;
             const a = document.getElementById('edit-anthem').value;
             const b = document.getElementById('edit-bio').value;
             
-            // SAVE ROTATION
-            const rotation = [];
-            for(let i=1; i<=5; i++) {
-                const v = document.getElementById('edit-rot-'+i).value.trim();
-                if(v) rotation.push(v);
+            // 1. Get the save button so we can show "Uploading..."
+            // (Note: We use querySelector to find the 'Save' button inside the edit modal)
+            const saveBtn = document.querySelector('#fs-edit button.text-blue-500');
+            const originalText = saveBtn ? saveBtn.innerText : "Save";
+            if(saveBtn) {
+                saveBtn.innerText = "Uploading...";
+                saveBtn.disabled = true;
             }
 
-            const u = { handle: h, bio: b, anthem: a, rotation: rotation };
-            if(State.tempImg) u.avatar = State.tempImg;
-            
-            App.db.ref('users/' + State.user.uid).update(u).then(() => {
-                App.ui.toast("Profile Updated");
-                App.ui.closeEdit();
-            });
+            // Helper function to finish the save after upload is done
+            const finishSave = (avatarUrl) => {
+                // Prepare Rotation
+                const rotation = [];
+                for(let i=1; i<=5; i++) {
+                    const v = document.getElementById('edit-rot-'+i).value.trim();
+                    if(v) rotation.push(v);
+                }
+
+                const u = { handle: h, bio: b, anthem: a, rotation: rotation };
+                if(avatarUrl) u.avatar = avatarUrl;
+                
+                App.db.ref('users/' + State.user.uid).update(u).then(() => {
+                    App.ui.toast("Profile Updated");
+                    App.ui.closeEdit();
+                    if(saveBtn) {
+                        saveBtn.innerText = originalText;
+                        saveBtn.disabled = false;
+                    }
+                });
+            };
+
+            // 2. If there is a new file, upload it to Storage
+            if(State.tempFile) {
+                const ref = firebase.storage().ref();
+                // Create a unique filename using the User ID
+                const fileRef = ref.child('avatars/' + State.user.uid + '.jpg');
+                
+                fileRef.put(State.tempFile).then(snapshot => {
+                    return snapshot.ref.getDownloadURL();
+                }).then(url => {
+                    // Success! We got the URL, now save the profile
+                    finishSave(url); 
+                    State.tempFile = null; 
+                }).catch(err => {
+                    console.error(err);
+                    App.ui.toast("Image upload failed: " + err.message, "error");
+                    if(saveBtn) {
+                        saveBtn.innerText = originalText;
+                        saveBtn.disabled = false;
+                    }
+                });
+            } else {
+                // No new image, just save the text changes
+                finishSave(null);
+            }
         },
         
         // ==========================================
@@ -2500,7 +3598,37 @@ const App = {
 
             inp.value = '';
         },
-        
+        // NEW: VAULT SEARCH LOGIC
+    searchVault: function(q) {
+        const list = document.getElementById('vault-list');
+        if(!q) { list.innerHTML = '<div class="text-center text-zinc-600 mt-10">Type to search the archives...</div>'; return; }
+
+        App.db.ref('history').orderByChild('artist').limitToLast(100).once('value', s => {
+            list.innerHTML = '';
+            const v = s.val();
+            if(v) {
+                const res = Object.values(v).filter(i => 
+                    (i.artist && i.artist.toLowerCase().includes(q.toLowerCase())) || 
+                    (i.song && i.song.toLowerCase().includes(q.toLowerCase()))
+                ).reverse().slice(0, 20); 
+
+                if(res.length === 0) list.innerHTML = '<div class="text-center text-zinc-600 mt-4">No records found.</div>';
+
+                res.forEach(i => {
+                    const div = document.createElement('div');
+                    div.className = "bg-zinc-900 p-3 rounded-xl border border-zinc-800 flex justify-between items-center";
+                    div.innerHTML = `
+                        <div>
+                            <div class="font-bold text-white">${i.artist}</div>
+                            <div class="text-xs text-zinc-500">${i.song}</div>
+                        </div>
+                        <div class="font-black text-yellow-500 text-lg">${i.score || '-'}</div>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+        });
+    },
         loadInbox: function() {
              const list = document.getElementById('inbox-list');
              list.innerHTML = '<div class="text-center mt-4"><div class="spinner border-zinc-500"></div></div>';
@@ -2540,7 +3668,7 @@ const App = {
         }
     }
 };
-
+ 
 App.init();
 </script>
 </body>
