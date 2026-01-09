@@ -3408,26 +3408,24 @@ fetchRankList: function(sessionId) {
     App.db.ref('streamState/nowPlaying').on('value', s => {
         const d = s.val();
         const btn = document.getElementById('live-heart-btn');
-        // NEW: Get the Class Score Box
         const scoreBox = document.getElementById('live-class-box');
         
         if (d && d.artist) {
             document.getElementById('live-artist').innerText = d.artist;
             document.getElementById('live-song').innerText = d.song;
             
-            // NEW: Show the Class Score Box
+            // Show Class Score Box
             if(scoreBox) scoreBox.classList.remove('hidden');
 
             const badge = document.getElementById('live-user-badge');
             badge.style.opacity = '1';
             
-            // Show "PROFESSOR" if admin spun it
             const isProf = d.user === "THE PROFESSOR";
             const badgeColor = isProf ? "bg-yellow-500 text-black" : "bg-zinc-700 text-white";
             
             badge.innerHTML = `
-                <div class=\"w-6 h-6 rounded-full ${badgeColor} flex items-center justify-center text-[10px] font-bold\">${d.user.charAt(0)}</div>
-                <span class=\"text-xs font-bold text-zinc-300 cursor-pointer hover:text-white\" onclick=\"App.data.viewUser('${d.uid}')\">${isProf ? 'Professor Selection' : 'Submitted by ' + d.user}</span>
+                <div class="w-6 h-6 rounded-full ${badgeColor} flex items-center justify-center text-[10px] font-bold">${d.user.charAt(0)}</div>
+                <span class="text-xs font-bold text-zinc-300 cursor-pointer hover:text-white" onclick="App.data.viewUser('${d.uid}')">${isProf ? 'Professor Selection' : 'Submitted by ' + d.user}</span>
             `;
             
             State.song = { id: d.id, data: d };
@@ -3437,20 +3435,16 @@ fetchRankList: function(sessionId) {
             if(State.favorites[k]) btn.classList.add('text-red-500');
             else btn.classList.remove('text-red-500');
 
-            // --- NEW: LIVE CLASS AVERAGE CALCULATION ---
-            // We listen to the votes for THIS specific song ID
+            // LIVE CLASS AVERAGE CALCULATION
             App.db.ref('votes/' + d.id).on('value', vSnap => {
                 const votes = vSnap.val();
                 if(votes) {
                     const scores = Object.values(votes).map(v => v.total);
-                    // Calculate Average
                     const avg = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
                     
                     const el = document.getElementById('live-class-score');
                     if(el) {
                         el.innerText = avg;
-                        
-                        // Color Coding for the Average
                         if(avg >= 90) el.className = "text-2xl font-black text-yellow-400";
                         else if(avg >= 80) el.className = "text-2xl font-black text-green-400";
                         else if(avg >= 60) el.className = "text-2xl font-black text-blue-400";
@@ -3461,33 +3455,28 @@ fetchRankList: function(sessionId) {
                     if(el) el.innerText = "--";
                 }
             });
-            // --- END NEW LOGIC ---
             
         } else {
             document.getElementById('live-artist').innerText = "STANDBY";
             document.getElementById('live-song').innerText = "Waiting for class...";
             document.getElementById('live-user-badge').style.opacity = '0';
-            
-            // NEW: Hide the box if nothing is playing
             if(scoreBox) scoreBox.classList.add('hidden');
-            
             State.song = { id: null, data: null };
         }
     });
 
-    // 2. VOTING STATUS LISTENER (YOUR EXISTING CODE)
+    // 2. VOTING STATUS LISTENER
     App.db.ref('streamState/votingOpen').on('value', s => {
         const open = s.val();
-        State.votingOpen = open; // Keep local state in sync
+        State.votingOpen = open; 
         const voted = JSON.parse(localStorage.getItem('voted') || '[]');
         const hasVoted = State.song.id && voted.includes(State.song.id);
         
         const idle = document.getElementById('grade-idle');
         const active = document.getElementById('grade-active');
         const locked = document.getElementById('grade-locked');
-        const lockBtn = document.getElementById('btn-toggle-vote'); // Admin button
+        const lockBtn = document.getElementById('btn-toggle-vote'); 
         
-        // Update Admin Button Text
         if(lockBtn) {
             lockBtn.innerText = open ? "Lock Vote" : "Unlock Vote";
             lockBtn.className = open ? "px-4 bg-zinc-700 text-white font-bold rounded-lg border border-zinc-600 text-xs uppercase" : "px-4 bg-red-600 text-white font-bold rounded-lg border border-red-500 text-xs uppercase";
@@ -3507,192 +3496,86 @@ fetchRankList: function(sessionId) {
             idle.classList.remove('hidden');
         }
     });
-
-    // 3. DYNAMIC QUEUE LISTENER (YOUR EXISTING CODE)
-    // We listen to "streamState/currentSession" to know which queue to show
-    App.db.ref('streamState/currentSession').on('value', sessSnap => {
-        const currentSess = sessSnap.val();
-        const path = currentSess ? `dailyQueue/${currentSess}` : 'queue';
-        
-        // Detach old listener if any (simplification: just overwrite on-value)
-        App.db.ref(path).on('value', s => {
-            const l = document.getElementById('queue-list'); l.innerHTML = '';
-            const v = s.val();
-            if(v) {
-                Object.values(v).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)).forEach((item, i) => {
-                    const div = document.createElement('div');
-                    div.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center relative overflow-hidden group hover:border-zinc-600 transition-colors";
-                    if(i===0) div.innerHTML += '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_10px_#22c55e]"></div>';
-                    
-                    div.innerHTML += `
-                        <div class="pl-2 flex-1 min-w-0 mr-2">
-                            <div class="font-bold text-white text-sm text-truncate">${item.artist}</div>
-                            <div class="text-xs text-zinc-500 text-truncate">${item.song}</div>
-                        </div>
-                        <button onclick="App.data.viewUser('${item.uid}')" class="text-[10px] bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 font-bold hover:text-white hover:border-zinc-600 transition-colors shrink-0">${item.user}</button>
-                    `;
-                    l.appendChild(div);
-                });
-            } else {
-                l.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-4">Queue is empty for this session.</div>';
-            }
-        });
-    });
-
-    // 4. Listen for Session Status Changes to refresh Queue UI (YOUR EXISTING CODE)
-    App.db.ref('streamState/currentSession').on('value', () => {
-        // If we are currently looking at the queue page, reload the list
-        if(State.activePage === 'queue') {
-            // Default to Daily if live, Class if offline (optional logic, or just reload current tab)
-            App.data.loadQueueList();
-        }
-    });
 },
-
-        submitGrade: function() {
-            if(!State.song.id) return;
-            const t = State.grading.total;
-            App.db.ref('votes/' + State.song.id).push({
-                uid: State.user.uid,
-                user: State.user.handle,
-                scores: State.grading.scores,
-                total: t
-            });
-            if(!State.user.isAnon) {
-                App.db.ref('users/'+State.user.uid+'/stats').transaction(s => {
-                    const graded = (s && s.totalGraded ? s.totalGraded : 0) + 1;
-                    return s ? { ...s, totalVotes: (s.totalVotes||0)+1, totalScoreSum: (s.totalScoreSum||0)+t, totalGraded: graded } : { totalVotes: 1, totalScoreSum: t, totalGraded: 1 };
-                });
-            }
-            const v = JSON.parse(localStorage.getItem('voted') || '[]');
-            v.push(State.song.id);
-            localStorage.setItem('voted', JSON.stringify(v));
-            App.ui.toast("Grade Locked In!");
-        },
-
+ 
 addToQueue: function() {
-            const a = document.getElementById('q-artist').value;
-            const s = document.getElementById('q-song').value;
-            const usePass = document.getElementById('use-hall-pass').checked;
-            
-            if(!a) return App.ui.toast("Artist name required", "error");
+    const a = document.getElementById('q-artist').value;
+    const s = document.getElementById('q-song').value;
+    const usePass = document.getElementById('use-hall-pass').checked;
+    
+    if(!a) return App.ui.toast("Artist name required", "error");
 
-            App.db.ref('streamState/currentSession').once('value', sessSnap => {
-                const currentSess = sessSnap.val();
-                let msg, ts;
+    App.db.ref('streamState/currentSession').once('value', sessSnap => {
+        const currentSess = sessSnap.val();
+        let msg, ts;
 
-                // Base Timestamp = Now
-                ts = Date.now();
+        // Base Timestamp = Now
+        ts = Date.now();
 
-                // HALL PASS LOGIC
-                if(usePass) {
-                    // 1. Verify Pass
-                    App.db.ref(`users/${State.user.uid}/hallPasses`).once('value', pSnap => {
-                        const passes = pSnap.val();
-                        let validPassId = null;
+        // HALL PASS LOGIC
+        if(usePass) {
+            // 1. Verify Pass
+            App.db.ref(`users/${State.user.uid}/hallPasses`).once('value', pSnap => {
+                const passes = pSnap.val();
+                let validPassId = null;
 
-                        if(passes) {
-                            // Find first valid pass
-                            Object.keys(passes).forEach(k => {
-                                if(passes[k].expiresAt > Date.now() && !validPassId) validPassId = k;
-                            });
-                        }
-
-                        if(!validPassId) {
-                            App.ui.toast("No valid Hall Passes found!", "error");
-                            return; 
-                        }
-
-                        // 2. Consume Pass
-                        App.db.ref(`users/${State.user.uid}/hallPasses/${validPassId}`).remove();
-
-                        // 3. Apply "The Skip" (Backdate 1 year to jump to front)
-                        ts = Date.now() - (365 * 24 * 60 * 60 * 1000); 
-                        msg = "Hall Pass Used! Skipped to front.";
-                        
-                        finalize(ts, msg, currentSess);
+                if(passes) {
+                    // Find first valid pass
+                    Object.keys(passes).forEach(k => {
+                        if(passes[k].expiresAt > Date.now() && !validPassId) validPassId = k;
                     });
-                } else {
-                    msg = currentSess ? "Added to Daily Queue" : "Added to Class Queue";
-                    finalize(ts, msg, currentSess);
                 }
+
+                if(!validPassId) {
+                    App.ui.toast("No valid Hall Passes found!", "error");
+                    return; 
+                }
+
+                // 2. Consume Pass
+                App.db.ref(`users/${State.user.uid}/hallPasses/${validPassId}`).remove();
+
+                // 3. Apply "The Skip" (Backdate 1 year to jump to front)
+                ts = Date.now() - (365 * 24 * 60 * 60 * 1000); 
+                msg = "Hall Pass Used! Skipped to front.";
+                
+                finalize(ts, msg, currentSess);
             });
-
-            // Helper to finish the add
-            const finalize = (timestamp, message, sess) => {
-                const targetPath = sess ? `dailyQueue/${sess}` : 'queue';
-                
-                App.db.ref(targetPath).push({
-                    artist: a, song: s || 'Untitled',
-                    uid: State.user.uid, user: State.user.handle,
-                    timestamp: timestamp,
-                    // Mark as VIP if timestamp is old (skipped)
-                    isVip: timestamp < (Date.now() - 10000000) 
-                });
-
-                // Stats
-                if(!State.user.isAnon) {
-                    App.db.ref('users/'+State.user.uid+'/stats/totalPlugs').transaction(val => (val || 0) + 1);
-                }
-
-                document.getElementById('q-artist').value = '';
-                document.getElementById('q-song').value = '';
-                document.getElementById('use-hall-pass').checked = false; 
-                App.ui.toast(message);
-                
-                if(sess) App.ui.switchQueueTab('daily');
-                else App.ui.switchQueueTab('class');
-            };
-        },
-
-
-removeQueueItem: function(key) {
-    if(!confirm("Remove this song from the line?")) return;
-
-    // Determine which list we are looking at
-    App.db.ref('streamState/currentSession').once('value', sessSnap => {
-        const currentSess = sessSnap.val();
-        let path = 'queue'; // Default to Class Queue
-        
-        // If we are on Daily tab and a session exists
-        if(State.activeQueueTab === 'daily' && currentSess) {
-            path = `dailyQueue/${currentSess}`;
+        } else {
+            msg = currentSess ? "Added to Daily Queue" : "Added to Class Queue";
+            finalize(ts, msg, currentSess);
         }
-        
-        // Remove it
-        App.db.ref(`${path}/${key}`).remove()
-            .then(() => App.ui.toast("Removed from line."));
     });
-},
 
-editQueueItem: function(key) {
-    // Determine path first
-    App.db.ref('streamState/currentSession').once('value', sessSnap => {
-        const currentSess = sessSnap.val();
-        let path = 'queue'; 
+    // Helper to finish the add
+    const finalize = (timestamp, message, sess) => {
+        const targetPath = sess ? `dailyQueue/${sess}` : 'queue';
         
-        if(State.activeQueueTab === 'daily' && currentSess) {
-            path = `dailyQueue/${currentSess}`;
-        }
-
-        // Fetch current data to populate prompt
-        App.db.ref(`${path}/${key}`).once('value', s => {
-            const data = s.val();
-            if(!data) return;
-
-            const newArtist = prompt("Edit Artist:", data.artist);
-            const newSong = prompt("Edit Song:", data.song);
-
-            if(newArtist && newSong) {
-                App.db.ref(`${path}/${key}`).update({
-                    artist: newArtist,
-                    song: newSong
-                }).then(() => App.ui.toast("Request updated."));
-            }
+        App.db.ref(targetPath).push({
+            artist: a, 
+            song: s || 'Untitled',
+            uid: State.user.uid, 
+            user: State.user.handle,
+            timestamp: timestamp,
+            // Mark as VIP if timestamp is old (skipped)
+            isVip: timestamp < (Date.now() - 10000000) 
         });
-    });
+
+        // Stats
+        if(!State.user.isAnon) {
+            App.db.ref('users/'+State.user.uid+'/stats/totalPlugs').transaction(val => (val || 0) + 1);
+        }
+
+        // CLEAR INPUTS
+        document.getElementById('q-artist').value = '';
+        document.getElementById('q-song').value = '';
+        document.getElementById('use-hall-pass').checked = false; 
+        
+        App.ui.toast(message);
+        
+        // REMOVED: The lines that forced switchQueueTab.
+        // The list will now update automatically without reloading/sticking.
+    };
 },
-// --- END NEW LOGIC ---
 // --- TRIVIA LOGIC START ---
 listenTrivia: function() {
     App.db.ref('triviaState').on('value', s => {
@@ -3762,187 +3645,99 @@ submitTriviaVote: function(choice) {
 },
 // --- TRIVIA LOGIC END ---
 // NEW: CENTRAL QUEUE LOADER
-       loadQueueList: function() {// --- NEW: CHECK PASS INVENTORY ---
-            if(!State.user.isAnon) {
-                App.db.ref(`users/${State.user.uid}/hallPasses`).on('value', s => {
-                    const passes = s.val();
-                    let count = 0;
-                    if(passes) {
-                        Object.values(passes).forEach(p => {
-                            if(p.expiresAt > Date.now()) count++;
-                        });
-                    }
-                    
-                    const container = document.getElementById('hall-pass-toggle-container');
-                    const countLabel = document.getElementById('user-pass-count');
-                    
-                    if(count > 0) {
-                        if(container) container.classList.remove('hidden');
-                        if(countLabel) countLabel.innerText = count;
-                    } else {
-                        if(container) container.classList.add('hidden');
-                    }
-                });
-            }
-            // --- END NEW ---
+loadQueueList: function() {
     const l = document.getElementById('queue-list'); 
     if(!l) return;
-    l.innerHTML = '<div class="spinner border-zinc-500 mx-auto mt-4"></div>';
 
-    const tab = State.activeQueueTab || 'daily'; // Default to daily
-    const badge = document.getElementById('queue-status-badge');
+    // 1. CLEAR OLD LISTENERS
+    if(State.queueRef) State.queueRef.off();
+
+    // 2. SETUP UI
+    l.innerHTML = ''; 
     const explainer = document.getElementById('queue-explainer');
+    const badge = document.getElementById('queue-status-badge');
+
+    if(explainer) explainer.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking Queue...';
 
     App.db.ref('streamState/currentSession').once('value', sessSnap => {
         const currentSess = sessSnap.val();
-        
-        // UPDATE HEADER UI BASED ON LIVE STATUS
+        let fetchPath = 'queue'; 
+
+        // Update Badge
         if(currentSess) {
-            badge.innerText = "閥 LIVE";
+            badge.innerText = "🚨 LIVE";
             badge.className = "text-xs font-bold px-3 py-1 rounded-full border border-red-500 text-red-500 bg-red-900/20";
-            // Show Header Badge (Step 1 from previous instruction)
-            const hb = document.getElementById('header-live-badge');
-            if(hb) hb.classList.remove('hidden');
         } else {
             badge.innerText = "OFFLINE";
             badge.className = "text-xs font-bold px-3 py-1 rounded-full border border-zinc-600 text-zinc-400 bg-zinc-800";
-            // Hide Header Badge
-            const hb = document.getElementById('header-live-badge');
-            if(hb) hb.classList.add('hidden');
         }
 
-        // DETERMINE PATH TO FETCH
-        let fetchPath = 'queue'; // Default Class Queue
+        // Tab Logic
+        const tab = State.activeQueueTab || 'daily'; 
         
         if (tab === 'daily') {
             if (currentSess) {
                 fetchPath = `dailyQueue/${currentSess}`;
-                explainer.innerHTML = `<i class="fas fa-broadcast-tower text-red-400 mr-1"></i> <strong>Daily Show Queue</strong><br>These songs are lined up for TODAY'S live show. This list clears when the show ends.`;
+                explainer.innerHTML = `<i class="fas fa-broadcast-tower text-red-400 mr-1"></i> <strong>Daily Show Queue</strong><br>For TODAY'S live show.`;
                 explainer.className = "mb-4 p-3 rounded-xl bg-red-900/10 border border-red-900/30 text-xs text-red-200 leading-relaxed";
             } else {
                 l.innerHTML = '<div class="text-center text-zinc-500 text-sm mt-6 italic">Show is offline.<br>Check the <strong>Class Queue</strong>.</div>';
                 explainer.innerHTML = "Show is offline. No Daily Queue active.";
-                explainer.className = "mb-4 p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-500 leading-relaxed";
-                return; // Stop here, don't fetch
+                return; 
             }
         } else {
-            // Class Queue Tab
             fetchPath = 'queue';
-            explainer.innerHTML = `<i class="fas fa-archive text-blue-400 mr-1"></i> <strong>Class Queue</strong><br>The master backlog. Songs here are saved until the Professor pulls them for a show.`;
+            explainer.innerHTML = `<i class="fas fa-archive text-blue-400 mr-1"></i> <strong>Class Queue</strong><br>The Backlog (Full List).`;
             explainer.className = "mb-4 p-3 rounded-xl bg-blue-900/10 border border-blue-900/30 text-xs text-blue-200 leading-relaxed";
         }
 
-        // FETCH DATA
-        App.db.ref(fetchPath).on('value', s => {
-            l.innerHTML = '';
-            const v = s.val();
-            if(v) {
-                Object.keys(v).forEach((key, i) => {
-                    const item = v[key];
-                    // Sort locally if needed, usually Firebase order is by key which is timestamp-ish
-                    
-                    const div = document.createElement('div');
-                    div.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center relative overflow-hidden mb-2 group hover:border-zinc-600 transition-colors";
-                    
-                    // Highlight first item in Daily Queue only
-                    if(tab === 'daily' && i===0) div.innerHTML += '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_10px_#22c55e]"></div>';
+        // 3. RENDER LIST (With Name AND Delete Button)
+        State.queueRef = App.db.ref(fetchPath).orderByChild('timestamp');
 
-                    // CHECK IF IT IS MY SONG
-                    const isMine = item.uid === State.user.uid;
-                    let controls = '';
-                    
-                    if(isMine) {
-                        controls = `
-                            <div class="flex items-center gap-3 border-l border-zinc-700 pl-3 ml-2">
-                                <button onclick="App.data.editQueueItem('${key}')" class="text-zinc-500 hover:text-white"><i class="fas fa-pen"></i></button>
-                                <button onclick="App.data.removeQueueItem('${key}')" class="text-zinc-500 hover:text-red-500"><i class="fas fa-times"></i></button>
-                            </div>
-                        `;
-                    } else {
-                        // If not mine, show the user's name tag
-                        controls = `
-                            <div class="flex flex-col items-end gap-1 ml-2">
-                                <button onclick="App.data.viewUser('${item.uid}')" class="text-[10px] bg-zinc-950 border border-zinc-800 px-3 py-1 rounded-full text-zinc-400 font-bold hover:text-white transition-colors shrink-0">${item.user}</button>
-                                <span class="text-[9px] text-zinc-600 font-mono">${new Date(item.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
-                            </div>
-                        `;
-                    }
-
-                    div.innerHTML += `
-                        <div class="pl-2 flex-1 min-w-0">
-                            <div class="font-bold text-white text-sm truncate">${item.artist}</div>
-                            <div class="text-xs text-zinc-500 truncate">${item.song}</div>
-                        </div>
-                        ${controls}
-                    `;
-                    l.appendChild(div);
-                });
-            } else {
-                l.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-4 italic">List is empty.</div>';
+        State.queueRef.on('child_added', snap => {
+            const item = { key: snap.key, ...snap.val() };
+            
+            const div = document.createElement('div');
+            div.id = 'q-item-' + item.key;
+            div.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center relative overflow-hidden mb-2 group hover:border-zinc-600 transition-colors";
+            
+            // #1 Indicator
+            if(tab === 'daily' && l.children.length === 0) {
+                div.innerHTML += '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_10px_#22c55e]"></div>';
             }
+
+            // Hall Pass Border
+            if(item.isVip) div.classList.add('border-yellow-500', 'bg-yellow-900/10');
+
+            const isMine = item.uid === State.user.uid;
+            const timeStr = new Date(item.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+            
+            // Generate HTML
+            div.innerHTML += `
+                <div class="pl-2 flex-1 min-w-0">
+                    <div class="font-bold text-white text-sm truncate">${item.artist}</div>
+                    <div class="text-xs text-zinc-500 truncate">${item.song}</div>
+                </div>
+                
+                <div class="flex items-center gap-3 ml-2">
+                    <div class="flex flex-col items-end gap-1">
+                         <button onclick="App.data.viewUser('${item.uid}')" class="text-[10px] bg-zinc-950 border border-zinc-800 px-3 py-1 rounded-full text-zinc-400 font-bold shrink-0 hover:text-white transition-colors">${item.user || 'User'}</button>
+                         <span class="text-[9px] text-zinc-600 font-mono">${timeStr}</span>
+                    </div>
+                    ${isMine ? `<button onclick="App.data.removeQueueItem('${item.key}')" class="text-zinc-500 hover:text-red-500 ml-1"><i class="fas fa-times"></i></button>` : ''}
+                </div>
+            `;
+            l.appendChild(div);
+        });
+
+        // Handle Removes
+        State.queueRef.on('child_removed', snap => {
+            const el = document.getElementById('q-item-' + snap.key);
+            if(el) el.remove();
         });
     });
 },
-     loadChat: function(chan) {
-    if(State.user.isAnon) return document.getElementById('chat-feed').innerHTML = '<div class="text-center text-zinc-600 mt-10">Sign in to join the discussion.</div>';
-    
-    const f = document.getElementById('chat-feed');
-    // Only clear if switching channels (check if content exists and channel matches)
-    if(f.dataset.chan !== chan) {
-        f.innerHTML = '';
-        f.dataset.chan = chan;
-    }
-    
-    const isAdmin = State.user.role === 'admin';
-
-    // 1. ADDED: Unique ID for each message row
-    App.db.ref('channels/' + chan).limitToLast(50).on('child_added', s => {
-        const m = s.val();
-        const key = s.key;
-        
-        // Prevent duplicates
-        if(document.getElementById('msg-'+key)) return;
-
-        const div = document.createElement('div');
-        div.id = 'msg-' + key; // <--- Unique ID
-        const isMe = m.uid === State.user.uid;
-        
-        div.className = `chat-row ${isMe ? 'mine' : 'other'}`;
-        
-        let del = '';
-        if(isAdmin) {
-            del = `<span onclick="App.admin.deleteChat('${chan}', '${key}')" class="ml-2 text-[10px] text-zinc-600 hover:text-red-500 cursor-pointer"><i class="fas fa-trash"></i></span>`;
-        }
-
-        let html = '';
-        if(!isMe) {
-            html += `
-                <div>
-                    <div class="chat-meta mb-1 cursor-pointer hover:text-white flex items-center gap-1">
-                        <span onclick="App.data.viewUser('${m.uid}')">${m.user}</span>
-                        ${del}
-                    </div>
-                    <div class="chat-bubble">${m.text}</div>
-                </div>
-            `;
-        } else {
-            html += `<div class="chat-bubble">${m.text}</div>`;
-            if(isAdmin) html += `<div class="text-right">${del}</div>`;
-        }
-        
-        div.innerHTML = html;
-        f.appendChild(div);
-        f.scrollTop = f.scrollHeight;
-    });
-    
-    // 2. FIXED: REMOVE ONLY THE DELETED ELEMENT (No Refresh)
-    App.db.ref('channels/' + chan).on('child_removed', s => {
-        const el = document.getElementById('msg-' + s.key);
-        if(el) el.remove(); // Smooth removal, no flicker
-    });
-},
-
-loadFeed: function() {
+    loadFeed: function() {
     if(State.user.isAnon) return document.getElementById('feed-list').innerHTML = '<div class="text-center text-zinc-600 mt-10">Sign in to view feed.</div>';
     
     const f = document.getElementById('feed-list');
