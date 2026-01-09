@@ -739,7 +739,24 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
             transition: transform 0.2s;
         }
         .glass-card:active { transform: scale(0.98); background: rgba(255,255,255,0.08); }
-
+/* --- ADMIN HIGHLIGHT CSS --- */
+.admin-post {
+    border: 1px solid rgba(251, 191, 36, 0.5) !important;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+    background: linear-gradient(145deg, rgba(251, 191, 36, 0.05), #09090b) !important;
+}
+.admin-badge {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+    color: black;
+    font-weight: 900;
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-bottom: 4px;
+    box-shadow: 0 2px 10px rgba(251, 191, 36, 0.3);
+}
         .avatar-glow {
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.8);
@@ -752,6 +769,29 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
             -webkit-text-fill-color: transparent;
             font-weight: 800;
         }
+/* VIBE CHECK CARD STYLES */
+.vibe-card {
+    position: absolute;
+    width: 90%;
+    max-width: 340px;
+    height: 480px;
+    background: linear-gradient(145deg, #18181b, #09090b);
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s;
+    transform-origin: bottom center;
+    z-index: 10;
+}
+.vibe-card.swiping-left { transform: translateX(-150%) rotate(-20deg) !important; opacity: 0; }
+.vibe-card.swiping-right { transform: translateX(150%) rotate(20deg) !important; opacity: 0; }
+.vibe-img-area { height: 65%; width: 100%; position: relative; }
+.vibe-img-area img { width: 100%; height: 100%; object-fit: cover; }
+.vibe-content { flex: 1; padding: 20px; background: rgba(24,24,27,0.95); backdrop-filter: blur(10px); display: flex; flex-direction: column; justify-content: center; }
+
 </style>
 </head>
 <body>
@@ -834,13 +874,19 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
         
         <!-- HEADER -->
         <header class="app-header">
-            <div class="header-logo">
-                <span class="text-2xl">🎵</span>
-                <span>PMO</span>
-                <div class="live-badge">
-                    <div class="live-dot"></div> LIVE
-                </div>
-            </div>
+               <div class="header-logo">
+    <span class="text-2xl">🎵</span>
+    <span>PMO</span>
+    
+    <div id="header-live-badge" class="live-badge hidden ml-2">
+        <div class="live-dot"></div> LIVE
+    </div>
+
+    <div id="header-count-box" class="hidden ml-4 flex flex-col justify-center border-l border-white/10 pl-4">
+        <div class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Classmates</div>
+        <div id="header-count-val" class="text-xs font-black shimmer-gold">Loading...</div>
+    </div>
+</div>
             <div class="flex gap-4">
                 <!-- NEW: BELL (NOTIFICATIONS) -->
                 <button onclick="App.ui.openNotifications()" class="relative text-zinc-400 hover:text-white transition-colors text-xl w-8 h-8 flex items-center justify-center">
@@ -885,6 +931,7 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
                     <button onclick="App.ui.subTab('stage')" id="sub-stage" class="sub-pill active">Main Stage</button>
                     <button onclick="App.ui.subTab('queue')" id="sub-queue" class="sub-pill">The Queue</button>
                     <button onclick="App.ui.subTab('rank')" id="sub-rank" class="sub-pill">Leaderboard</button>
+                    <button onclick="App.ui.subTab('trivia')" id="sub-trivia" class="sub-pill text-yellow-500 border-yellow-500/30 bg-yellow-500/10">Pizza Party</button>
                 </div>
 
                 <div class="p-4 flex-1">
@@ -914,7 +961,21 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
                                     Lock Vote
                                 </button>
                             </div>
-                        </div>
+<div class="mt-4 pt-4 border-t border-zinc-700">
+    <div class="flex items-center justify-between mb-2">
+        <h4 class="text-[10px] font-bold text-blue-400 uppercase tracking-widest"><i class="fas fa-ticket-alt mr-1"></i> Hall Pass Dispenser</h4>
+        <span class="text-[9px] text-zinc-500">Max 2</span>
+    </div>
+    
+    <div class="relative mb-2">
+        <i class="fas fa-search absolute left-3 top-2.5 text-zinc-500 text-xs"></i>
+        <input id="admin-pass-search" placeholder="Search student..." class="w-full bg-black border border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-white text-xs outline-none focus:border-blue-500 placeholder-zinc-600" oninput="App.admin.renderStudentList(this.value)" onfocus="App.admin.renderStudentList(this.value)">
+    </div>
+
+    <div id="admin-pass-list" class="max-h-40 overflow-y-auto space-y-1 pr-1 bg-zinc-900/30 rounded-lg p-1 border border-zinc-800/50">
+        <div class="text-[10px] text-zinc-600 text-center py-4 italic">Start typing to find students...</div>
+    </div>
+</div>                        </div>
 
                         <!-- Now Playing Card -->
                         <div class="card-glass p-1 rounded-[32px] relative overflow-hidden group">
@@ -931,10 +992,17 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
                                     </button>
                                 </div>
 
-                                <div class="mb-6 overflow-hidden">
-                                    <h2 id="live-artist" class="text-3xl font-black text-white leading-tight mb-2 tracking-tight text-truncate">STANDBY</h2>
-                                    <h3 id="live-song" class="text-lg font-medium text-blue-400 text-truncate">Waiting for class to start...</h3>
-                                </div>
+                               <div class="flex items-end justify-between mb-6">
+    <div class="overflow-hidden flex-1 mr-2">
+        <h2 id="live-artist" class="text-3xl font-black text-white leading-tight mb-2 tracking-tight text-truncate">STANDBY</h2>
+        <h3 id="live-song" class="text-lg font-medium text-blue-400 text-truncate">Waiting for class...</h3>
+    </div>
+
+    <div id="live-class-box" class="bg-zinc-800 border border-zinc-700 p-2 rounded-xl text-center shrink-0 hidden">
+        <div class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Class Avg</div>
+        <div id="live-class-score" class="text-2xl font-black text-white">--</div>
+    </div>
+</div>
 
                                 <div id="live-user-badge" class="flex items-center gap-3 bg-white/5 p-2 rounded-full w-max pr-4 opacity-0 transition-opacity">
                                     <!-- Populated by JS -->
@@ -1030,6 +1098,18 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
                             <button onclick="App.data.addToQueue()" class="w-full bg-white text-black font-black uppercase tracking-widest py-4 rounded-xl hover:bg-zinc-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]">
                                 Add to Line
                             </button>
+<div id="hall-pass-toggle-container" class="hidden mb-3 bg-blue-900/20 border border-blue-500/30 p-3 rounded-xl flex items-center justify-between">
+    <div>
+        <div class="text-blue-400 font-bold text-xs flex items-center gap-1">
+            <i class="fas fa-ticket-alt"></i> Use Hall Pass?
+        </div>
+        <div class="text-[10px] text-blue-300/70">Skip to the front (<span id="user-pass-count">0</span> left)</div>
+    </div>
+    <label class="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" id="use-hall-pass" class="sr-only peer">
+        <div class="w-9 h-5 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+    </label>
+</div>
                         </div>
                         
                         <div class="h-px bg-zinc-800 my-6"></div>
@@ -1040,8 +1120,7 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
                  
 
                     <!-- RANK -->
-                   <!-- RANK -->
-                    <div id="sv-rank" class="hidden">
+                <div id="sv-rank" class="hidden">
                         <div class="flex justify-between items-center mb-4">
                             <div>
                                 <h2 class="text-2xl font-black text-white">Honor Roll</h2>
@@ -1051,8 +1130,45 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
                                 <i class="fas fa-history mr-2"></i>Vault
                             </button>
                         </div>
+                        
+                        <div id="rank-date-tabs" class="flex gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
+                            <div class="animate-pulse bg-zinc-800 h-8 w-20 rounded-full"></div>
+                            <div class="animate-pulse bg-zinc-800 h-8 w-20 rounded-full"></div>
+                        </div>
 
-                        <!-- NEW: DATE TABS -->
+                        <div id="rank-list" class="space-y-3 pb-20"></div>
+                    </div> <div id="sv-trivia" class="hidden h-full flex flex-col pt-2">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-3xl font-black text-yellow-500 uppercase italic tracking-tighter">Pizza Party</h2>
+                                <p class="text-xs text-zinc-500 font-bold">LIVE TRIVIA INTERACTION</p>
+                            </div>
+                            <div id="trivia-timer" class="text-2xl font-black text-white font-mono bg-zinc-800 px-3 py-1 rounded-lg opacity-0">--</div>
+                        </div>
+
+                        <div id="trivia-idle" class="flex-1 flex flex-col items-center justify-center text-center opacity-60">
+                            <i class="fas fa-pizza-slice text-7xl text-zinc-700 mb-6 animate-bounce"></i>
+                            <h3 class="text-2xl font-bold text-zinc-400 uppercase">Waiting for Host...</h3>
+                            <p class="text-sm text-zinc-600 mt-2 px-8">When the Host activates a Power-Up or Poll, it will appear here instantly.</p>
+                        </div>
+
+                        <div id="trivia-active" class="hidden flex-1 flex flex-col">
+                            <div class="bg-gradient-to-r from-yellow-900/50 to-red-900/50 p-4 rounded-2xl border border-yellow-500/30 mb-6 relative overflow-hidden">
+                                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500 to-red-500 animate-pulse"></div>
+                                <h3 id="trivia-prompt" class="text-xl font-black text-white mb-1 uppercase drop-shadow-md">CROWD POLL ACTIVE!</h3>
+                                <p class="text-xs text-yellow-200/70 font-bold uppercase tracking-widest">Cast your vote now!</p>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 flex-1 mb-safe">
+                                <button onclick="App.data.submitTriviaVote('0')" class="trivia-opt-btn bg-zinc-800 hover:bg-blue-600 border-b-4 border-zinc-950 active:border-b-0 active:translate-y-1 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group"><span class="text-5xl font-black text-zinc-700 group-hover:text-white">A</span></button>
+                                <button onclick="App.data.submitTriviaVote('1')" class="trivia-opt-btn bg-zinc-800 hover:bg-green-600 border-b-4 border-zinc-950 active:border-b-0 active:translate-y-1 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group"><span class="text-5xl font-black text-zinc-700 group-hover:text-white">B</span></button>
+                                <button onclick="App.data.submitTriviaVote('2')" class="trivia-opt-btn bg-zinc-800 hover:bg-yellow-600 border-b-4 border-zinc-950 active:border-b-0 active:translate-y-1 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group"><span class="text-5xl font-black text-zinc-700 group-hover:text-white">C</span></button>
+                                <button onclick="App.data.submitTriviaVote('3')" class="trivia-opt-btn bg-zinc-800 hover:bg-red-600 border-b-4 border-zinc-950 active:border-b-0 active:translate-y-1 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all group"><span class="text-5xl font-black text-zinc-700 group-hover:text-white">D</span></button>
+                            </div>
+                            <div id="trivia-status-msg" class="text-center text-sm font-black text-green-500 uppercase tracking-widest hidden animate-pulse mb-4">Vote Sent!</div>
+                        </div>
+                    </div>                       
+<!-- NEW: DATE TABS -->
                         <div id="rank-date-tabs" class="flex gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
                             <!-- Tabs injected via JS -->
                             <div class="animate-pulse bg-zinc-800 h-8 w-20 rounded-full"></div>
@@ -1065,7 +1181,30 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
 
                 </div>
             </div>
+<div id="view-vibe" class="view-section relative overflow-hidden">
+    <div class="p-6 text-center">
+        <h2 class="text-2xl font-black text-white italic tracking-tighter uppercase">Vibe Check</h2>
+        <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Discover New Taste</p>
+    </div>
 
+    <div id="vibe-stack" class="flex-1 relative flex items-center justify-center px-4 pb-24 h-full">
+        <div class="text-center opacity-50 absolute z-0">
+            <i class="fas fa-spinner fa-spin text-4xl text-zinc-700 mb-4"></i>
+            <h3 class="text-zinc-500 font-bold">Finding classmates...</h3>
+        </div>
+        
+        </div>
+
+    <div class="absolute bottom-[100px] w-full px-10 flex justify-between items-center z-20">
+        <button onclick="App.data.swipe('left')" class="w-16 h-16 rounded-full bg-zinc-900 border border-zinc-700 text-red-500 text-2xl shadow-xl flex items-center justify-center active:scale-90 transition-transform">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <button onclick="App.data.swipe('right')" class="w-20 h-20 rounded-full bg-blue-600 text-white text-3xl shadow-[0_0_30px_rgba(37,99,235,0.5)] flex items-center justify-center active:scale-90 transition-transform">
+            <i class="fas fa-bolt"></i>
+        </button>
+    </div>
+</div>
             <!-- VIEW 2: SOCIAL FEED (ENHANCED) -->
             <div id="view-feed" class="view-section">
                 <!-- Guest Lock -->
@@ -1297,6 +1436,9 @@ input[type=range].grade-slider::-webkit-slider-thumb:active {
         </div>
     </div>
     </div> <nav class="app-nav">
+<div onclick="App.ui.switchTab('vibe')" class="nav-item" id="nav-vibe">
+    <i class="fas fa-bolt"></i><span>Vibe</span>
+</div>
             <div onclick="App.ui.switchTab('show')" class="nav-item active" id="nav-show">
                 <i class="fas fa-broadcast-tower"></i><span>Show</span>
             </div>
@@ -1945,6 +2087,7 @@ const CONFIG = {
 
 const State = {
     user: null,
+    userCache: {},
     song: { id: null, data: null },
     tempFile: null,
     grading: { scores: { flow:0, beat:0, bars:0, vibe:0, aes:0 }, total: 0 },
@@ -2070,37 +2213,47 @@ if (!State.user.isAnon && !v.termsAgreed) {
         },
 
         // "The Podium" Logic
-        spinTrack: function() {
-            const artist = document.getElementById('admin-artist').value;
-            const song = document.getElementById('admin-song').value;
+       // REPLACE your admin.spinTrack with this to ensure GPA tracking works:
+spinTrack: function() {
+    const artist = document.getElementById('admin-artist').value;
+    const song = document.getElementById('admin-song').value;
 
-            if(!artist || !song) return App.ui.toast("Enter artist and song.", "error");
+    if(!artist || !song) return App.ui.toast("Enter artist and song.", "error");
 
-            const trackId = 'live_' + Date.now();
-            App.db.ref('streamState/nowPlaying').set({
-                id: trackId,
-                artist: artist,
-                song: song,
-                uid: State.user.uid,
-                user: "THE PROFESSOR",
-                timestamp: Date.now()
-            });
+    const trackId = 'live_' + Date.now();
+    
+    // 1. Set Playing
+    App.db.ref('streamState/nowPlaying').set({
+        id: trackId,
+        artist: artist,
+        song: song,
+        uid: State.user.uid, // <--- IMPORTANT: This links the song to the Admin for now, 
+                             // BUT if you picked from queue, you should grab that user's UID.
+                             // For manual spin, it counts as Admin's song.
+        user: "THE PROFESSOR",
+        timestamp: Date.now()
+    });
 
-            // Also add to history for records
-            App.db.ref('history/' + trackId).set({
-                artist: artist,
-                song: song,
-                score: 0, 
-                timestamp: Date.now()
-            });
+    // 2. Create History Entry (Placeholder)
+    // We add UID here so calculateStats can find it later
+    App.db.ref('history/' + trackId).set({
+        artist: artist,
+        song: song,
+        uid: State.user.uid, // <--- CRITICAL FOR GPA
+        user: "THE PROFESSOR",
+        score: 0, 
+        classScore: 0,
+        sessionId: State.currentSessionId || 0, // Ensure you have a session ID
+        timestamp: Date.now()
+    });
 
-            // Reset Voting
-            App.db.ref('streamState/votingOpen').set(true);
+    // Reset Voting
+    App.db.ref('streamState/votingOpen').set(true);
 
-            App.ui.toast("Spinning Track!");
-            document.getElementById('admin-artist').value = '';
-            document.getElementById('admin-song').value = '';
-        },
+    App.ui.toast("Spinning Track!");
+    document.getElementById('admin-artist').value = '';
+    document.getElementById('admin-song').value = '';
+},
 
         toggleVoting: function() {
             const newState = !State.votingOpen;
@@ -2115,6 +2268,11 @@ if (!State.user.isAnon && !v.termsAgreed) {
                 App.ui.toast("Post Deleted.");
             }
         },
+togglePin: function(postId, currentStatus) {
+    // Toggle the state (if true make false, if false make true)
+    App.db.ref('posts/' + postId).update({ pinned: !currentStatus });
+    App.ui.toast(currentStatus ? "Unpinned Post" : "Pinned to Top");
+},
 
         deleteSyllabusItem: function(classId, itemId) {
             if(confirm("Admin: Remove this song from syllabus?")) {
@@ -2153,9 +2311,83 @@ if (!State.user.isAnon && !v.termsAgreed) {
             });
 
             // SILENT: No popup anymore
-        }
-    },
+        },
+    
+// --- PASTE THIS INSIDE App.admin ---
+        // 1. RENDER THE STUDENT LIST
+        renderStudentList: function(q) {
+            const list = document.getElementById('admin-pass-list');
+            
+            // Fetch all users
+            App.db.ref('users').once('value', s => {
+                const all = s.val();
+                list.innerHTML = ''; // Clear current list
+                
+                if(!all) {
+                    list.innerHTML = '<div class="text-[10px] text-zinc-600 text-center py-2">No students found.</div>';
+                    return;
+                }
 
+                let foundCount = 0;
+
+                Object.keys(all).forEach(uid => {
+                    const u = all[uid];
+                    // Filter: Handle must exist AND match search (or show all if search is empty)
+                    // We also exclude admins/self if desired, but showing everyone is safer
+                    if(u.handle && (q === "" || u.handle.toLowerCase().includes(q.toLowerCase()))) {
+                        
+                        const div = document.createElement('div');
+                        div.className = "flex justify-between items-center bg-zinc-800 p-2 rounded-md border border-zinc-700 hover:border-zinc-500 transition-colors";
+                        
+                        // Avatar or Initial
+                        const icon = u.avatar 
+                            ? `<img src="${u.avatar}" class="w-6 h-6 rounded-full object-cover border border-zinc-600">` 
+                            : `<div class="w-6 h-6 rounded-full bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-400 border border-zinc-600">${u.handle[0]}</div>`;
+
+                        div.innerHTML = `
+                            <div class="flex items-center gap-2 overflow-hidden">
+                                ${icon}
+                                <span class="text-xs font-bold text-white truncate">${u.handle}</span>
+                            </div>
+                            <button onclick="App.admin.grantHallPass('${uid}', '${u.handle}')" class="bg-blue-600 text-white text-[9px] font-bold px-3 py-1.5 rounded hover:bg-blue-500 shadow-lg active:scale-95 transition-transform shrink-0">
+                                GIVE
+                            </button>
+                        `;
+                        list.appendChild(div);
+                        foundCount++;
+                    }
+                });
+                
+                if(foundCount === 0) list.innerHTML = '<div class="text-[10px] text-zinc-500 text-center py-2">No match found.</div>';
+            });
+        },
+
+        // 2. GRANT PASS (Updated to take ID directly)
+        grantHallPass: function(targetUid, targetHandle) {
+            if(!targetUid) return;
+
+            // Check Limits
+            App.db.ref(`users/${targetUid}/hallPasses`).once('value', s => {
+                const passes = s.val();
+                let valid = 0;
+                if(passes) Object.values(passes).forEach(p => { if(p.expiresAt > Date.now()) valid++; });
+
+                if(valid >= 2) {
+                    return App.ui.toast(`@${targetHandle} already has 2 passes`, "error");
+                }
+
+                // Grant
+                App.db.ref(`users/${targetUid}/hallPasses`).push({
+                    grantedAt: Date.now(),
+                    expiresAt: Date.now() + (14 * 24 * 60 * 60 * 1000), // 14 Days
+                    grantedBy: "PROFESSOR"
+                });
+
+                App.ui.toast(`Pass granted to @${targetHandle}`);
+                App.data.sendNotification(targetUid, 'admin', 'You earned a Hall Pass! (Valid 14 Days)');
+           });
+        }, 
+    },
     // ==========================================
     // NEW: SETTINGS MODULE
     // ==========================================
@@ -2175,7 +2407,7 @@ if (!State.user.isAnon && !v.termsAgreed) {
             }
         },
 
-        requestNotify: function() {
+      requestNotify: function() {
             if (!("Notification" in window)) {
                 alert("This browser does not support desktop notifications");
             } else if (Notification.permission === "granted") {
@@ -2188,10 +2420,38 @@ if (!State.user.isAnon && !v.termsAgreed) {
                     }
                 });
             }
+        },
+
+        // --- PASTE THIS NEW FUNCTION HERE ---
+        clearSwipes: function() {
+            if(confirm("Reset your swipe history? You will see everyone again.")) {
+                localStorage.removeItem('swiped_users');
+                App.ui.toast("History Cleared");
+                // Reload the stack if we are on the vibe page
+                if(State.activePage === 'vibe' || document.getElementById('view-vibe').classList.contains('active')) {
+                     App.data.loadVibeStack();
+                }
+            }
         }
+        // --- END NEW FUNCTION ---
     },
 
     utils: {
+// NEW: GPA CONVERTER
+        toGPA: function(score) {
+            if(!score && score !== 0) return "0.0";
+            if(score >= 93) return "4.0";
+            if(score >= 90) return "3.7";
+            if(score >= 87) return "3.3";
+            if(score >= 83) return "3.0";
+            if(score >= 80) return "2.7";
+            if(score >= 77) return "2.3";
+            if(score >= 73) return "2.0";
+            if(score >= 70) return "1.7";
+            if(score >= 67) return "1.3";
+            if(score >= 65) return "1.0";
+            return "0.0";
+        },
         copyToClip: function(text) {
             try {
                 const el = document.createElement('textarea');
@@ -2340,8 +2600,9 @@ openLegal: function(isVoluntary) {
             this.updateProfile();
             this.checkGuest();
             this.checkAdmin(); // Check for upgrades
-            
+            App.data.updateClassmateCount(); // <--- Add this
             App.data.listenLive();
+            App.data.listenTrivia();
             App.data.loadChat(State.activeChan);
             App.data.loadFeed();
 App.data.loadLeaderboardSessions(); // <--- ADD THIS
@@ -2375,13 +2636,19 @@ toggleQuiet: function(active) {
                 document.getElementById('nav-profile').classList.add('active');
             }
             if(id === 'chat') setTimeout(() => document.getElementById('chat-feed').scrollTop = 99999, 50);
+if(id === 'vibe') App.data.loadVibeStack();
         },
-        subTab: function(subId) {
-            ['stage', 'queue', 'rank'].forEach(k => {
-                document.getElementById('sv-' + k).classList.toggle('hidden', k !== subId);
+      subTab: function(subId) {
+            // FIX: Added 'trivia' to this list so the tab actually opens
+            ['stage', 'queue', 'rank', 'trivia'].forEach(k => {
+                const el = document.getElementById('sv-' + k);
                 const btn = document.getElementById('sub-' + k);
-                if(k === subId) btn.className = "sub-pill active";
-                else btn.className = "sub-pill";
+                
+                if (el) el.classList.toggle('hidden', k !== subId);
+                if (btn) {
+                    if(k === subId) btn.className = "sub-pill active";
+                    else btn.className = "sub-pill";
+                }
             });
         },
         setChannel: function(chan) {
@@ -2481,7 +2748,7 @@ updateProfile: function() {
                 document.getElementById('profile-rank').innerText = rank;
                 document.getElementById('profile-rank').className = "badge-rank-pill";
             }
-
+             
             // 7. AVATAR FIX (The Lapse Fix)
             // We run this last to ensure everything else loaded first
             const img = document.getElementById('profile-img');
@@ -2616,6 +2883,169 @@ openSyllabus: function() {
     },
 
     data: {
+// --- NEW VIBE CHECK LOGIC ---
+
+// 1. Update the Header Count
+updateClassmateCount: function() {
+    App.db.ref('users').once('value', s => {
+        const count = s.numChildren();
+        document.getElementById('header-count-val').innerText = count + " Active";
+        document.getElementById('header-count-box').classList.remove('hidden');
+    });
+},
+
+// 2. Load the Deck (SORTED BY VIBE MATCH %)
+loadVibeStack: function() {
+    const stack = document.getElementById('vibe-stack');
+    stack.innerHTML = '<div class="spinner border-zinc-500"></div>';
+    
+    // 1. Get My Favorites for comparison
+    const myFavs = State.favorites ? Object.values(State.favorites).map(f => `${f.artist}###${f.song}`) : [];
+
+    App.db.ref('users').once('value', s => {
+        const allUsers = s.val();
+        if(!allUsers) {
+             stack.innerHTML = '<div class="text-center text-zinc-500 p-8"><h3>No classmates found.</h3></div>';
+             return;
+        }
+
+        const swiped = JSON.parse(localStorage.getItem('swiped_users') || '[]');
+        let candidates = [];
+        
+        Object.keys(allUsers).forEach(uid => {
+            // Filter: Not me, and not already swiped
+            if(uid !== State.user.uid && !swiped.includes(uid)) {
+                const u = allUsers[uid];
+                
+                // --- CALCULATE VIBE SCORE ---
+                let score = 0;
+                const theirFavs = u.favorites ? Object.values(u.favorites).map(f => `${f.artist}###${f.song}`) : [];
+                
+                if(myFavs.length > 0 && theirFavs.length > 0) {
+                    let matches = 0;
+                    theirFavs.forEach(songKey => {
+                        if(myFavs.includes(songKey)) matches++;
+                    });
+                    // Calculate Percentage
+                    score = Math.round((matches / Math.max(myFavs.length, theirFavs.length)) * 100);
+                }
+                
+                // Add to list with score
+                candidates.push({ uid: uid, score: score, ...u });
+            }
+        });
+
+        // 2. SORT LOGIC: Highest Score First, then Random fallback
+        candidates.sort((a,b) => b.score - a.score);
+        
+        // Save to State
+        State.vibeQueue = candidates;
+        App.data.renderNextCard();
+    });
+},
+// 3. Render Top Card
+renderNextCard: function() {
+    const stack = document.getElementById('vibe-stack');
+    stack.innerHTML = ''; // Clear previous card
+    
+    // Check if empty
+    if(!State.vibeQueue || State.vibeQueue.length === 0) {
+        stack.innerHTML = `
+            <div class="text-center text-zinc-500 p-8">
+                <i class="fas fa-check-circle text-4xl text-zinc-700 mb-4"></i>
+                <h3>All caught up!</h3>
+                <p class="text-xs mb-4">You've viewed every student.</p>
+                <button onclick="App.settings.clearSwipes()" class="text-[10px] text-blue-500 underline">Reset History</button>
+            </div>`;
+        return;
+    }
+
+    const u = State.vibeQueue[0]; // Get the first person (Highest Match)
+    const card = document.createElement('div');
+    card.className = "vibe-card";
+    card.id = "active-card";
+    
+    // Avatar Logic
+    const imgHtml = u.avatar ? `<img src="${u.avatar}">` : `<div class="w-full h-full bg-zinc-800 flex items-center justify-center text-6xl font-black text-zinc-700">${u.handle[0]}</div>`;
+    const anthem = u.anthem ? `<div class="text-xs font-bold text-blue-400 mt-1"><i class="fas fa-music mr-1"></i> ${u.anthem}</div>` : '';
+
+    // Color code the match %
+    let matchColor = "bg-zinc-800 text-zinc-400";
+    if(u.score >= 80) matchColor = "bg-green-500 text-black shadow-[0_0_15px_rgba(34,197,94,0.4)]";
+    else if(u.score >= 50) matchColor = "bg-blue-600 text-white";
+    
+    card.innerHTML = `
+        <div class="vibe-img-area">
+            ${imgHtml}
+            <div class="absolute top-4 right-4 z-20">
+                <div class="${matchColor} font-black text-sm px-3 py-1 rounded-full border border-white/10">
+                    ${u.score}% MATCH
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-black to-transparent"></div>
+        </div>
+        <div class="vibe-content">
+            <h2 class="text-2xl font-black text-white">${u.handle}</h2>
+            <div class="flex gap-2 mb-2">
+               <span class="bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-1 rounded uppercase">Student</span>
+            </div>
+            ${anthem}
+            <p class="text-sm text-zinc-400 mt-2 line-clamp-2">"${u.bio || 'Just vibing.'}"</p>
+        </div>
+    `;
+    stack.appendChild(card);
+},
+
+// 4. Handle Swipe Action
+swipe: function(dir) {
+    if(!State.vibeQueue || State.vibeQueue.length === 0) return;
+    
+    const card = document.getElementById('active-card');
+    if(!card) return;
+
+    // Animation
+    card.classList.add(dir === 'right' ? 'swiping-right' : 'swiping-left');
+    
+    // Logic
+    const targetUser = State.vibeQueue[0];
+    const swiped = JSON.parse(localStorage.getItem('swiped_users') || '[]');
+    swiped.push(targetUser.uid);
+    localStorage.setItem('swiped_users', JSON.stringify(swiped));
+
+    // Remove from queue
+    setTimeout(() => {
+        State.vibeQueue.shift(); // Remove top card
+        App.data.renderNextCard(); // Show next
+    }, 300);
+
+    // If Right Swipe -> FOLLOW & MATCH CHECK
+    if(dir === 'right') {
+        // 1. Follow them automatically
+        App.db.ref(`users/${State.user.uid}/following/${targetUser.uid}`).set(true);
+        App.db.ref(`users/${targetUser.uid}/followers/${State.user.uid}`).set(true);
+        
+        // 2. Check for Vibe Match (Mutual)
+        App.db.ref(`users/${State.user.uid}/followers/${targetUser.uid}`).once('value', s => {
+            if(s.exists()) {
+                // IT'S A MATCH! Use existing Modal
+                const modal = document.getElementById('fs-vibe-match');
+                document.getElementById('vm-my-img').src = State.user.avatar || 'https://via.placeholder.com/150';
+                document.getElementById('vm-their-img').src = targetUser.avatar || 'https://via.placeholder.com/150';
+                modal.classList.remove('hidden');
+                modal.classList.add('active-flex');
+                
+                // Close after 3s
+                setTimeout(() => {
+                    modal.classList.remove('active-flex');
+                    setTimeout(() => modal.classList.add('hidden'), 500);
+                }, 3000);
+            } else {
+                App.ui.toast(`You rocked with ${targetUser.handle}!`);
+            }
+        });
+    }
+},
+// --- END NEW LOGIC ---
 acceptTerms: function() {
     if(State.user.isAnon) {
         document.getElementById('fs-legal').classList.remove('open');
@@ -2633,64 +3063,98 @@ acceptTerms: function() {
         // =========================================
 
         // 1. Calculate GPA, Badges, and "Class Of"
-        calculateStats: function() {
-            const uid = State.viewUid || State.user.uid;
-            const isMe = (uid === State.user.uid);
-            
-            // Fetch all posts by this user to find graded songs
-            App.db.ref('posts').orderByChild('uid').equalTo(uid).once('value', s => {
-                let totalScore = 0, count = 0, perfect = 0, platinumCount = 0;
-                const posts = s.val();
-                
-                if(posts) {
-                    Object.values(posts).forEach(p => {
-                        if(p.grades) {
-                            const grades = Object.values(p.grades);
-                            const avg = grades.reduce((a,b)=>a+b,0) / grades.length;
-                            
-                            totalScore += avg;
-                            count++;
-                            
-                            // "Golden" is a perfect score (or near perfect)
-                            if(avg >= 98) perfect++; 
-                            // "Platinum Plaque" is average over 90
-                            if(avg >= 90) platinumCount++;
-                        }
-                    });
-                }
-                
-                const gpa = count > 0 ? (totalScore / count).toFixed(1) : "0.0";
-                
-                // --- UPDATE THE PROFILE UI ---
-                if(document.getElementById('stat-gpa')) document.getElementById('stat-gpa').innerText = gpa;
-                if(document.getElementById('stat-golden')) document.getElementById('stat-golden').innerText = perfect;
-                if(document.getElementById('rc-gpa')) document.getElementById('rc-gpa').innerText = gpa;
-                
-                // RENDER BADGES (Plaques)
-                const bc = document.getElementById('badge-container');
-                if(bc) {
-                    bc.innerHTML = '';
-                    // Add 1 Platinum Icon for every 90+ song
-                    for(let i=0; i<platinumCount; i++) {
-                        bc.innerHTML += `<div class="badge-platinum"><i class="fas fa-compact-disc"></i></div>`;
-                    }
-                    // Add Label Exec Badge if 5+ plaques
-                    if(platinumCount >= 5) {
-                        bc.innerHTML += `<div class="badge-exec"><i class="fas fa-crown"></i> LABEL EXEC</div>`;
-                    }
-                }
+       calculateStats: function() {
+    const uid = State.viewUid || State.user.uid;
+    const isMe = (uid === State.user.uid);
+    
+    // THIS IS THE ONLY PLACE WE CONVERT TO 4.0
+    const toGPA = (score) => {
+        if(score >= 93) return 4.0;
+        if(score >= 90) return 3.7;
+        if(score >= 87) return 3.3;
+        if(score >= 83) return 3.0;
+        if(score >= 80) return 2.7;
+        if(score >= 77) return 2.3;
+        if(score >= 73) return 2.0;
+        if(score >= 70) return 1.7;
+        if(score >= 67) return 1.3;
+        if(score >= 65) return 1.0;
+        return 0.0;
+    };
 
-                // SAVE TO DATABASE (Only if it's my own profile)
-                if(isMe) {
-                    App.db.ref(`users/${uid}/stats`).update({ 
-                        gpa: gpa, 
-                        totalGraded: count, 
-                        golden: perfect, 
-                        platinum: platinumCount 
-                    });
+    let totalPoints = 0;
+    let gradedCount = 0;
+    let perfect = 0;
+    let platinumCount = 0;
+
+    const p1 = App.db.ref('posts').orderByChild('uid').equalTo(uid).once('value');
+    const p2 = App.db.ref('history').once('value');
+
+    Promise.all([p1, p2]).then(results => {
+        const posts = results[0].val();
+        const history = results[1].val();
+
+        // 1. Calculate from Feed Posts
+        if(posts) {
+            Object.values(posts).forEach(p => {
+                if(p.grades) {
+                    const g = Object.values(p.grades);
+                    const avg = g.reduce((a,b)=>a+b,0) / g.length; // Average is 0-100
+                    
+                    totalPoints += toGPA(avg); // Convert to 4.0
+                    gradedCount++;
+                    if(avg >= 98) perfect++;
+                    if(avg >= 90) platinumCount++;
                 }
             });
-        },
+        }
+
+        // 2. Calculate from Live History
+        if(history) {
+            Object.values(history).forEach(h => {
+                if((h.uid === uid || h.user === State.user.handle) && h.score && h.classScore) {
+                    const finalAvg = (h.score + h.classScore) / 2; // Average is 0-100
+                    
+                    totalPoints += toGPA(finalAvg); // Convert to 4.0
+                    gradedCount++;
+                    if(finalAvg >= 98) perfect++;
+                    if(finalAvg >= 90) platinumCount++;
+                }
+            });
+        }
+
+        // Final GPA Calculation
+        const gpa = gradedCount > 0 ? (totalPoints / gradedCount).toFixed(2) : "0.00";
+
+        // Update UI
+        if(document.getElementById('stat-gpa')) document.getElementById('stat-gpa').innerText = gpa;
+        if(document.getElementById('stat-golden')) document.getElementById('stat-golden').innerText = perfect;
+        if(document.getElementById('rc-gpa')) document.getElementById('rc-gpa').innerText = gpa;
+        if(document.getElementById('stat-graded')) document.getElementById('stat-graded').innerText = gradedCount;
+
+        // Render Badges
+        const bc = document.getElementById('badge-container');
+        if(bc) {
+            bc.innerHTML = '';
+            for(let i=0; i<platinumCount; i++) {
+                bc.innerHTML += `<div class="badge-platinum"><i class="fas fa-compact-disc"></i></div>`;
+            }
+            if(platinumCount >= 5) {
+                bc.innerHTML += `<div class="badge-exec"><i class="fas fa-crown"></i> LABEL EXEC</div>`;
+            }
+        }
+
+        // Save to DB
+        if(isMe) {
+            App.db.ref(`users/${uid}/stats`).update({ 
+                gpa: gpa, 
+                totalGraded: gradedCount, 
+                golden: perfect, 
+                platinum: platinumCount 
+            });
+        }
+    });
+},
 
         // 2. Update Live Score while Sliding (The Math)
         updateFeedGrade: function(cat, val) {
@@ -2713,30 +3177,37 @@ acceptTerms: function() {
 
         // 3. Submit the Final Grade to Database
       submitFinalGrade: function() {
-            if(!State.activePostId) return;
-            const score = parseInt(document.getElementById('grade-live-score').innerText);
-            const uid = State.user.uid;
-            
-            // Determine where to save based on what we are grading
-            const collection = State.activeCollection || 'posts';
-            
-            // Save the grade
-            App.db.ref(`${collection}/${State.activePostId}/grades/${uid}`).set(score).then(() => {
-                
-                // UPDATE USER STATS (This makes it show up on their profile)
-                App.db.ref('users/'+State.user.uid+'/stats').transaction(s => {
-                    // Increment totalGraded count
-                    const graded = (s && s.totalGraded ? s.totalGraded : 0) + 1;
-                    // Add to totalScoreSum for averages
-                    const currentSum = s && s.totalScoreSum ? s.totalScoreSum : 0;
-                    
-                    return s ? { ...s, totalScoreSum: currentSum + score, totalGraded: graded } : { totalScoreSum: score, totalGraded: 1 };
-                });
+    if(!State.activePostId) return;
+    
+    // 1. Get Professor Score
+    const profScore = parseInt(document.getElementById('grade-live-score').innerText);
+    const uid = State.user.uid;
+    const collection = State.activeCollection || 'posts';
 
-                App.ui.toast("Grade Recorded!");
-                App.ui.closeGrading();
-            });
-        },
+    // 2. SAVE PROFESSOR SCORE
+    App.db.ref(`${collection}/${State.activePostId}/grades/${uid}`).set(profScore);
+
+    // 3. NEW: IF THIS IS A LIVE SONG (IN HISTORY), SAVE THE CLASS AVERAGE TOO
+    // We check if the ID starts with "live_" which we set in App.admin.spinTrack
+    if(State.activePostId.startsWith('live_')) {
+        const classAvgText = document.getElementById('live-class-score').innerText;
+        const classAvg = (classAvgText !== '--' && classAvgText !== '0') ? parseInt(classAvgText) : profScore; // Fallback to prof score if no votes
+        
+        App.db.ref('history/' + State.activePostId).update({
+            score: profScore,       // Professor Grade
+            classScore: classAvg    // Class Average
+        });
+        
+        App.ui.toast("Official Grades Logged.");
+    } else {
+        App.ui.toast("Grade Recorded!");
+    }
+
+    App.ui.closeGrading();
+    
+    // Trigger stat update
+    setTimeout(() => App.data.calculateStats(), 1000);
+},
         
         // 4. Generate Monthly Report Card Data
         generateReportCard: function() {
@@ -2831,187 +3302,252 @@ acceptTerms: function() {
             });
         },
 
-        fetchRankList: function(sessionId) {
-            const l = document.getElementById('rank-list'); 
-            l.innerHTML = '<div class="spinner border-zinc-500 mx-auto mt-10"></div>';
+fetchRankList: function(sessionId) {
+    const l = document.getElementById('rank-list');
+    
+    // Only show spinner if empty to prevent flash
+    if(l.children.length === 0) l.innerHTML = '<div class="spinner border-zinc-500 mx-auto mt-10"></div>';
 
-            App.db.ref('history').orderByChild('sessionId').equalTo(sessionId).once('value', s => {
-                l.innerHTML = '';
-                const v = s.val();
+    App.db.ref('history').orderByChild('sessionId').equalTo(sessionId).once('value', s => {
+        const v = s.val();
+        
+        if(!v) {
+            l.innerHTML = '<div class="text-center text-zinc-600 italic mt-10">No tracks graded this session.</div>';
+            return;
+        }
+
+        // Clear spinner if present
+        if(l.querySelector('.spinner')) l.innerHTML = '';
+
+        const items = Object.values(v).sort((a,b) => {
+            const scoreA = ((a.score||0) + (a.classScore||0)) / 2;
+            const scoreB = ((b.score||0) + (b.classScore||0)) / 2;
+            if (a.score === 'GOLDEN') return -1; 
+            if (b.score === 'GOLDEN') return 1;
+            return scoreB - scoreA;
+        });
+
+        // Track valid IDs to remove old ones
+        const validIds = new Set();
+
+        items.forEach((item, i) => {
+            // Use unique ID for the ROW
+            const rowId = `rank-${item.id}`; 
+            validIds.add(rowId);
+
+            const k = `${item.artist}###${item.song}`;
+            const likedClass = State.favorites[k] ? 'text-red-500' : 'text-zinc-600';
+            
+            const profScore = item.score || 0;
+            const classScore = item.classScore || 0;
+            
+            const finalAvg = Math.round((profScore + classScore) / 2);
+            const isGolden = finalAvg >= 98;
+            
+            const goldClass = isGolden ? 'shimmer-gold' : 'text-zinc-700';
+            const borderClass = isGolden ? 'border-gold' : 'border-zinc-800';
+            const rowClass = isGolden ? 'golden-row' : '';
+            const profColor = isGolden ? 'shimmer-gold' : 'text-yellow-500';
+
+            let classColor = "text-zinc-600";
+            if(classScore >= 90) classColor = "text-purple-400";
+            else if(classScore >= 80) classColor = "text-green-400";
+            else if(classScore >= 70) classColor = "text-blue-400";
+            else if(classScore > 0) classColor = "text-red-400";
+
+            // CHECK: Does this row exist?
+            let div = document.getElementById(rowId);
+            
+            const htmlContent = `
+                <div class="font-black ${goldClass} text-xl w-8 text-center shrink-0">#${i+1}</div>
+                <div class="flex-1 min-w-0 flex flex-col justify-center">
+                    <div class="font-bold text-white text-sm truncate ${isGolden ? 'text-yellow-100' : ''}">${item.artist}</div>
+                    <div class="text-xs text-zinc-500 truncate">${item.song}</div>
+                </div>
                 
-                if(!v) {
-                    l.innerHTML = '<div class="text-center text-zinc-600 italic mt-10">No tracks graded this session.</div>';
-                    return;
-                }
+                <div class="flex gap-3 mr-2">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[8px] text-zinc-500 uppercase font-bold">Class</span>
+                        <span class="font-black ${classColor} text-lg leading-none">${classScore}</span>
+                    </div>
+                    <div class="w-px bg-zinc-700"></div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-[8px] text-zinc-500 uppercase font-bold">Prof</span>
+                        <span class="font-black ${profColor} text-lg leading-none">${profScore}</span>
+                    </div>
+                </div>
+                <button onclick="App.data.addToFav('${k}', this)" class="${likedClass} w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:bg-white/5 active:scale-90 transition-all">
+                    <i class="fas fa-heart text-lg"></i>
+                </button>
+            `;
 
-                // SORTING LOGIC (Golden First)
-                Object.values(v).sort((a,b) => {
-                    if (a.score === 'GOLDEN' && b.score === 'GOLDEN') return b.timestamp - a.timestamp;
-                    if (a.score === 'GOLDEN') return -1;
-                    if (b.score === 'GOLDEN') return 1;
-                    return (parseFloat(b.score)||0) - (parseFloat(a.score)||0);
-                }).forEach((item, i) => {
-                    const k = `${item.artist}###${item.song}`;
-                    const likedClass = State.favorites[k] ? 'text-red-500' : 'text-zinc-600';
-                    const isGolden = item.score === 'GOLDEN';
-                    const goldClass = isGolden ? 'shimmer-gold' : 'text-zinc-700';
-                    const borderClass = isGolden ? 'border-gold' : 'border-zinc-800';
-                    const scoreColor = isGolden ? 'shimmer-gold text-2xl' : 'text-yellow-500 text-xl';
-                    const rowClass = isGolden ? 'golden-row' : '';
+            if (div) {
+                // UPDATE EXISTING (No Flash)
+                div.className = `bg-zinc-900 p-3 rounded-2xl border ${borderClass} ${rowClass} flex items-center gap-3 mb-2 transition-all`;
+                if(div.innerHTML !== htmlContent) div.innerHTML = htmlContent;
+            } else {
+                // CREATE NEW
+                div = document.createElement('div');
+                div.id = rowId;
+                div.className = `bg-zinc-900 p-3 rounded-2xl border ${borderClass} ${rowClass} flex items-center gap-3 mb-2 transition-all`;
+                div.innerHTML = htmlContent;
+                l.appendChild(div);
+            }
+        });
 
-                    const div = document.createElement('div');
-                    div.className = `bg-zinc-900 p-3 rounded-2xl border ${borderClass} ${rowClass} flex items-center gap-3 transition-all`;
+        // Cleanup removed items
+        Array.from(l.children).forEach(child => {
+            if (child.id && child.id.startsWith('rank-') && !validIds.has(child.id)) {
+                child.remove();
+            }
+        });
+    });
+},
+       listenLive: function() {
+    // 1. LISTEN FOR SONG DETAILS (NOW PLAYING)
+    App.db.ref('streamState/nowPlaying').on('value', s => {
+        const d = s.val();
+        const btn = document.getElementById('live-heart-btn');
+        // NEW: Get the Class Score Box
+        const scoreBox = document.getElementById('live-class-box');
+        
+        if (d && d.artist) {
+            document.getElementById('live-artist').innerText = d.artist;
+            document.getElementById('live-song').innerText = d.song;
+            
+            // NEW: Show the Class Score Box
+            if(scoreBox) scoreBox.classList.remove('hidden');
+
+            const badge = document.getElementById('live-user-badge');
+            badge.style.opacity = '1';
+            
+            // Show "PROFESSOR" if admin spun it
+            const isProf = d.user === "THE PROFESSOR";
+            const badgeColor = isProf ? "bg-yellow-500 text-black" : "bg-zinc-700 text-white";
+            
+            badge.innerHTML = `
+                <div class=\"w-6 h-6 rounded-full ${badgeColor} flex items-center justify-center text-[10px] font-bold\">${d.user.charAt(0)}</div>
+                <span class=\"text-xs font-bold text-zinc-300 cursor-pointer hover:text-white\" onclick=\"App.data.viewUser('${d.uid}')\">${isProf ? 'Professor Selection' : 'Submitted by ' + d.user}</span>
+            `;
+            
+            State.song = { id: d.id, data: d };
+            
+            // Check Heart
+            const k = `${d.artist}###${d.song}`;
+            if(State.favorites[k]) btn.classList.add('text-red-500');
+            else btn.classList.remove('text-red-500');
+
+            // --- NEW: LIVE CLASS AVERAGE CALCULATION ---
+            // We listen to the votes for THIS specific song ID
+            App.db.ref('votes/' + d.id).on('value', vSnap => {
+                const votes = vSnap.val();
+                if(votes) {
+                    const scores = Object.values(votes).map(v => v.total);
+                    // Calculate Average
+                    const avg = Math.round(scores.reduce((a,b) => a+b, 0) / scores.length);
                     
-                    // Fetch Class Average
-                    // Note: We use the item.id (timestamp) to find the votes
-                    App.db.ref('votes/' + item.id).once('value', vSnap => {
-                        let avgText = "No Votes";
-                        let avgColor = "text-zinc-600";
+                    const el = document.getElementById('live-class-score');
+                    if(el) {
+                        el.innerText = avg;
                         
-                        const votes = vSnap.val();
-                        if (votes) {
-                            const scores = Object.values(votes).map(v => v.total);
-                            const avg = (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1);
-                            avgText = `Class: ${avg}`;
-                            
-                            // Color logic for class avg
-                            if(avg >= 90) avgColor = "text-purple-400";
-                            else if(avg >= 80) avgColor = "text-green-400";
-                            else if(avg >= 70) avgColor = "text-blue-400";
-                            else if(avg >= 60) avgColor = "text-yellow-400";
-                            else avgColor = "text-red-400";
-                        }
+                        // Color Coding for the Average
+                        if(avg >= 90) el.className = "text-2xl font-black text-yellow-400";
+                        else if(avg >= 80) el.className = "text-2xl font-black text-green-400";
+                        else if(avg >= 60) el.className = "text-2xl font-black text-blue-400";
+                        else el.className = "text-2xl font-black text-red-500";
+                    }
+                } else {
+                    const el = document.getElementById('live-class-score');
+                    if(el) el.innerText = "--";
+                }
+            });
+            // --- END NEW LOGIC ---
+            
+        } else {
+            document.getElementById('live-artist').innerText = "STANDBY";
+            document.getElementById('live-song').innerText = "Waiting for class...";
+            document.getElementById('live-user-badge').style.opacity = '0';
+            
+            // NEW: Hide the box if nothing is playing
+            if(scoreBox) scoreBox.classList.add('hidden');
+            
+            State.song = { id: null, data: null };
+        }
+    });
 
-                        div.innerHTML = `
-                            <div class="font-black ${goldClass} text-xl w-8 text-center shrink-0">#${i+1}</div>
-                            <div class="flex-1 min-w-0 flex flex-col justify-center">
-                                <div class="font-bold text-white text-sm truncate ${isGolden ? 'text-yellow-100' : ''}">${item.artist}</div>
-                                <div class="text-xs text-zinc-500 truncate">${item.song}</div>
-                                <div class="text-[9px] font-bold ${avgColor} mt-1 uppercase tracking-wider">${avgText}</div>
-                            </div>
-                            <div class="flex flex-col items-end justify-center mr-2 shrink-0">
-                                <span class="text-[8px] text-zinc-500 uppercase font-bold mb-0.5">Prof</span>
-                                <span class="font-black ${scoreColor} leading-none">${isGolden ? '🏆' : item.score}</span>
-                                ${isGolden ? '<span class="text-[8px] font-black uppercase tracking-widest shimmer-gold mt-0.5">GOLDEN</span>' : ''}
-                            </div>
-                            <button onclick="App.data.addToFav('${k}', this)" class="${likedClass} w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:bg-white/5 active:scale-90 transition-all">
-                                <i class="fas fa-heart text-lg"></i>
-                            </button>
-                        `;
-                    });
+    // 2. VOTING STATUS LISTENER (YOUR EXISTING CODE)
+    App.db.ref('streamState/votingOpen').on('value', s => {
+        const open = s.val();
+        State.votingOpen = open; // Keep local state in sync
+        const voted = JSON.parse(localStorage.getItem('voted') || '[]');
+        const hasVoted = State.song.id && voted.includes(State.song.id);
+        
+        const idle = document.getElementById('grade-idle');
+        const active = document.getElementById('grade-active');
+        const locked = document.getElementById('grade-locked');
+        const lockBtn = document.getElementById('btn-toggle-vote'); // Admin button
+        
+        // Update Admin Button Text
+        if(lockBtn) {
+            lockBtn.innerText = open ? "Lock Vote" : "Unlock Vote";
+            lockBtn.className = open ? "px-4 bg-zinc-700 text-white font-bold rounded-lg border border-zinc-600 text-xs uppercase" : "px-4 bg-red-600 text-white font-bold rounded-lg border border-red-500 text-xs uppercase";
+        }
+
+        idle.classList.add('hidden');
+        active.classList.add('hidden');
+        locked.classList.add('hidden');
+        
+        if (open && State.song.id) {
+            if (hasVoted) {
+                locked.classList.remove('hidden');
+            } else {
+                active.classList.remove('hidden');
+            }
+        } else {
+            idle.classList.remove('hidden');
+        }
+    });
+
+    // 3. DYNAMIC QUEUE LISTENER (YOUR EXISTING CODE)
+    // We listen to "streamState/currentSession" to know which queue to show
+    App.db.ref('streamState/currentSession').on('value', sessSnap => {
+        const currentSess = sessSnap.val();
+        const path = currentSess ? `dailyQueue/${currentSess}` : 'queue';
+        
+        // Detach old listener if any (simplification: just overwrite on-value)
+        App.db.ref(path).on('value', s => {
+            const l = document.getElementById('queue-list'); l.innerHTML = '';
+            const v = s.val();
+            if(v) {
+                Object.values(v).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)).forEach((item, i) => {
+                    const div = document.createElement('div');
+                    div.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center relative overflow-hidden group hover:border-zinc-600 transition-colors";
+                    if(i===0) div.innerHTML += '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_10px_#22c55e]"></div>';
                     
+                    div.innerHTML += `
+                        <div class="pl-2 flex-1 min-w-0 mr-2">
+                            <div class="font-bold text-white text-sm text-truncate">${item.artist}</div>
+                            <div class="text-xs text-zinc-500 text-truncate">${item.song}</div>
+                        </div>
+                        <button onclick="App.data.viewUser('${item.uid}')" class="text-[10px] bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 font-bold hover:text-white hover:border-zinc-600 transition-colors shrink-0">${item.user}</button>
+                    `;
                     l.appendChild(div);
                 });
-            });
-        },
-        listenLive: function() {
-            App.db.ref('streamState/nowPlaying').on('value', s => {
-                const d = s.val();
-                const btn = document.getElementById('live-heart-btn');
-                
-                if (d && d.artist) {
-                    document.getElementById('live-artist').innerText = d.artist;
-                    document.getElementById('live-song').innerText = d.song;
-                    const badge = document.getElementById('live-user-badge');
-                    badge.style.opacity = '1';
-                    
-                    // Show "PROFESSOR" if admin spun it
-                    const isProf = d.user === "THE PROFESSOR";
-                    const badgeColor = isProf ? "bg-yellow-500 text-black" : "bg-zinc-700 text-white";
-                    
-                    badge.innerHTML = `
-                        <div class=\"w-6 h-6 rounded-full ${badgeColor} flex items-center justify-center text-[10px] font-bold\">${d.user.charAt(0)}</div>
-                        <span class=\"text-xs font-bold text-zinc-300 cursor-pointer hover:text-white\" onclick=\"App.data.viewUser('${d.uid}')\">${isProf ? 'Professor Selection' : 'Submitted by ' + d.user}</span>
-                    `;
-                    
-                    State.song = { id: d.id, data: d };
-                    
-                    // Check Heart
-                    const k = `${d.artist}###${d.song}`;
-                    if(State.favorites[k]) btn.classList.add('text-red-500');
-                    else btn.classList.remove('text-red-500');
-                    
-                } else {
-                    document.getElementById('live-artist').innerText = "STANDBY";
-                    document.getElementById('live-song').innerText = "Waiting for class...";
-                    document.getElementById('live-user-badge').style.opacity = '0';
-                    State.song = { id: null, data: null };
-                }
-            });
+            } else {
+                l.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-4">Queue is empty for this session.</div>';
+            }
+        });
+    });
 
-            App.db.ref('streamState/votingOpen').on('value', s => {
-                const open = s.val();
-                State.votingOpen = open; // Keep local state in sync
-                const voted = JSON.parse(localStorage.getItem('voted') || '[]');
-                const hasVoted = State.song.id && voted.includes(State.song.id);
-                
-                const idle = document.getElementById('grade-idle');
-                const active = document.getElementById('grade-active');
-                const locked = document.getElementById('grade-locked');
-                const lockBtn = document.getElementById('btn-toggle-vote'); // Admin button
-                
-                // Update Admin Button Text
-                if(lockBtn) {
-                    lockBtn.innerText = open ? "Lock Vote" : "Unlock Vote";
-                    lockBtn.className = open ? "px-4 bg-zinc-700 text-white font-bold rounded-lg border border-zinc-600 text-xs uppercase" : "px-4 bg-red-600 text-white font-bold rounded-lg border border-red-500 text-xs uppercase";
-                }
-
-                idle.classList.add('hidden');
-                active.classList.add('hidden');
-                locked.classList.add('hidden');
-                
-                if (open && State.song.id) {
-                    if (hasVoted) {
-                        locked.classList.remove('hidden');
-                    } else {
-                        active.classList.remove('hidden');
-                    }
-                } else {
-                    idle.classList.remove('hidden');
-                }
-            });
-
-           // DYNAMIC QUEUE LISTENER
-            // We listen to "streamState/currentSession" to know which queue to show
-            App.db.ref('streamState/currentSession').on('value', sessSnap => {
-                const currentSess = sessSnap.val();
-                const path = currentSess ? `dailyQueue/${currentSess}` : 'queue';
-                
-                // Detach old listener if any (simplification: just overwrite on-value)
-                App.db.ref(path).on('value', s => {
-                    const l = document.getElementById('queue-list'); l.innerHTML = '';
-                    const v = s.val();
-                    if(v) {
-                        Object.values(v).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)).forEach((item, i) => {
-                            const div = document.createElement('div');
-                            div.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center relative overflow-hidden group hover:border-zinc-600 transition-colors";
-                            if(i===0) div.innerHTML += '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_10px_#22c55e]"></div>';
-                            
-                            div.innerHTML += `
-                                <div class="pl-2 flex-1 min-w-0 mr-2">
-                                    <div class="font-bold text-white text-sm text-truncate">${item.artist}</div>
-                                    <div class="text-xs text-zinc-500 text-truncate">${item.song}</div>
-                                </div>
-                                <button onclick="App.data.viewUser('${item.uid}')" class="text-[10px] bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-full text-zinc-400 font-bold hover:text-white hover:border-zinc-600 transition-colors shrink-0">${item.user}</button>
-                            `;
-                            l.appendChild(div);
-                        });
-                    } else {
-                        l.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-4">Queue is empty for this session.</div>';
-                    }
-                });
-            });
-
-// Listen for Session Status Changes to refresh Queue UI
-            App.db.ref('streamState/currentSession').on('value', () => {
-                // If we are currently looking at the queue page, reload the list
-                if(State.activePage === 'queue') {
-                    // Default to Daily if live, Class if offline (optional logic, or just reload current tab)
-                    App.data.loadQueueList();
-                }
-            });
-           
- },
+    // 4. Listen for Session Status Changes to refresh Queue UI (YOUR EXISTING CODE)
+    App.db.ref('streamState/currentSession').on('value', () => {
+        // If we are currently looking at the queue page, reload the list
+        if(State.activePage === 'queue') {
+            // Default to Daily if live, Class if offline (optional logic, or just reload current tab)
+            App.data.loadQueueList();
+        }
+    });
+},
 
         submitGrade: function() {
             if(!State.song.id) return;
@@ -3034,30 +3570,64 @@ acceptTerms: function() {
             App.ui.toast("Grade Locked In!");
         },
 
-     addToQueue: function() {
+addToQueue: function() {
             const a = document.getElementById('q-artist').value;
             const s = document.getElementById('q-song').value;
+            const usePass = document.getElementById('use-hall-pass').checked;
             
             if(!a) return App.ui.toast("Artist name required", "error");
 
-            // LOGIC: If Show is Live -> Daily Queue. If Offline -> Class Queue.
             App.db.ref('streamState/currentSession').once('value', sessSnap => {
                 const currentSess = sessSnap.val();
-                
-                let path, msg;
+                let msg, ts;
 
-                if (currentSess) {
-                    path = `dailyQueue/${currentSess}`;
-                    msg = "Added to Daily Show Queue (Live)";
+                // Base Timestamp = Now
+                ts = Date.now();
+
+                // HALL PASS LOGIC
+                if(usePass) {
+                    // 1. Verify Pass
+                    App.db.ref(`users/${State.user.uid}/hallPasses`).once('value', pSnap => {
+                        const passes = pSnap.val();
+                        let validPassId = null;
+
+                        if(passes) {
+                            // Find first valid pass
+                            Object.keys(passes).forEach(k => {
+                                if(passes[k].expiresAt > Date.now() && !validPassId) validPassId = k;
+                            });
+                        }
+
+                        if(!validPassId) {
+                            App.ui.toast("No valid Hall Passes found!", "error");
+                            return; 
+                        }
+
+                        // 2. Consume Pass
+                        App.db.ref(`users/${State.user.uid}/hallPasses/${validPassId}`).remove();
+
+                        // 3. Apply "The Skip" (Backdate 1 year to jump to front)
+                        ts = Date.now() - (365 * 24 * 60 * 60 * 1000); 
+                        msg = "Hall Pass Used! Skipped to front.";
+                        
+                        finalize(ts, msg, currentSess);
+                    });
                 } else {
-                    path = 'queue';
-                    msg = "Added to Class Queue (Offline)";
+                    msg = currentSess ? "Added to Daily Queue" : "Added to Class Queue";
+                    finalize(ts, msg, currentSess);
                 }
+            });
 
-                App.db.ref(path).push({
+            // Helper to finish the add
+            const finalize = (timestamp, message, sess) => {
+                const targetPath = sess ? `dailyQueue/${sess}` : 'queue';
+                
+                App.db.ref(targetPath).push({
                     artist: a, song: s || 'Untitled',
                     uid: State.user.uid, user: State.user.handle,
-                    timestamp: Date.now()
+                    timestamp: timestamp,
+                    // Mark as VIP if timestamp is old (skipped)
+                    isVip: timestamp < (Date.now() - 10000000) 
                 });
 
                 // Stats
@@ -3067,386 +3637,609 @@ acceptTerms: function() {
 
                 document.getElementById('q-artist').value = '';
                 document.getElementById('q-song').value = '';
-                App.ui.toast(msg);
+                document.getElementById('use-hall-pass').checked = false; 
+                App.ui.toast(message);
                 
-                // Force switch to the tab where we just added the song
-                if(currentSess) App.ui.switchQueueTab('daily');
+                if(sess) App.ui.switchQueueTab('daily');
                 else App.ui.switchQueueTab('class');
-            });
+            };
         },
 
+
+removeQueueItem: function(key) {
+    if(!confirm("Remove this song from the line?")) return;
+
+    // Determine which list we are looking at
+    App.db.ref('streamState/currentSession').once('value', sessSnap => {
+        const currentSess = sessSnap.val();
+        let path = 'queue'; // Default to Class Queue
+        
+        // If we are on Daily tab and a session exists
+        if(State.activeQueueTab === 'daily' && currentSess) {
+            path = `dailyQueue/${currentSess}`;
+        }
+        
+        // Remove it
+        App.db.ref(`${path}/${key}`).remove()
+            .then(() => App.ui.toast("Removed from line."));
+    });
+},
+
+editQueueItem: function(key) {
+    // Determine path first
+    App.db.ref('streamState/currentSession').once('value', sessSnap => {
+        const currentSess = sessSnap.val();
+        let path = 'queue'; 
+        
+        if(State.activeQueueTab === 'daily' && currentSess) {
+            path = `dailyQueue/${currentSess}`;
+        }
+
+        // Fetch current data to populate prompt
+        App.db.ref(`${path}/${key}`).once('value', s => {
+            const data = s.val();
+            if(!data) return;
+
+            const newArtist = prompt("Edit Artist:", data.artist);
+            const newSong = prompt("Edit Song:", data.song);
+
+            if(newArtist && newSong) {
+                App.db.ref(`${path}/${key}`).update({
+                    artist: newArtist,
+                    song: newSong
+                }).then(() => App.ui.toast("Request updated."));
+            }
+        });
+    });
+},
+// --- END NEW LOGIC ---
+// --- TRIVIA LOGIC START ---
+listenTrivia: function() {
+    App.db.ref('triviaState').on('value', s => {
+        const state = s.val();
+        const idle = document.getElementById('trivia-idle');
+        const active = document.getElementById('trivia-active');
+        const timer = document.getElementById('trivia-timer');
+        const prompt = document.getElementById('trivia-prompt');
+        
+        if (!state || !state.activeAdvantage) {
+            idle.classList.remove('hidden');
+            active.classList.add('hidden');
+            timer.innerText = "--";
+            return;
+        }
+
+        const timeElapsed = (Date.now() - state.timestamp) / 1000;
+        const timeLeft = 60 - timeElapsed;
+
+        if (timeLeft <= 0) {
+            idle.classList.remove('hidden');
+            active.classList.add('hidden');
+            timer.innerText = "0s";
+            return;
+        }
+
+        idle.classList.add('hidden');
+        active.classList.remove('hidden');
+        
+        if(state.activeAdvantage === 'Poll') prompt.innerText = "CROWD POLL: VOTE NOW!";
+        else if(state.activeAdvantage === '50/50') prompt.innerText = "50/50: VOTE TO REMOVE WRONG ANSWERS";
+        else prompt.innerText = "HELP THE PLAYER!";
+
+        let localTime = Math.floor(timeLeft);
+        timer.innerText = localTime + "s";
+        
+        if(State.triviaInterval) clearInterval(State.triviaInterval);
+        State.triviaInterval = setInterval(() => {
+            localTime--;
+            timer.innerText = localTime + "s";
+            if(localTime <= 0) {
+                clearInterval(State.triviaInterval);
+                idle.classList.remove('hidden');
+                active.classList.add('hidden');
+            }
+        }, 1000);
+    });
+},
+
+submitTriviaVote: function(choice) {
+    if(State.user.isAnon) return App.ui.toast("Sign in to vote!", "error");
+    
+    document.querySelectorAll('.trivia-opt-btn').forEach(b => b.classList.add('opacity-50', 'pointer-events-none'));
+    document.getElementById('trivia-status-msg').classList.remove('hidden');
+
+    App.db.ref('triviaState').once('value', s => {
+        const state = s.val();
+        if(state && state.eventId) {
+            App.db.ref(`triviaVotes/${state.eventId}/${State.user.uid}`).set({
+                choice: choice,
+                handle: State.user.handle,
+                timestamp: Date.now()
+            });
+            App.ui.toast("Vote Cast!");
+        }
+    });
+},
+// --- TRIVIA LOGIC END ---
 // NEW: CENTRAL QUEUE LOADER
-        loadQueueList: function() {
-            const l = document.getElementById('queue-list'); 
-            if(!l) return;
-            l.innerHTML = '<div class="spinner border-zinc-500 mx-auto mt-4"></div>';
-
-            const tab = State.activeQueueTab || 'daily';
-            const badge = document.getElementById('queue-status-badge');
-            const explainer = document.getElementById('queue-explainer');
-
-            App.db.ref('streamState/currentSession').once('value', sessSnap => {
-                const currentSess = sessSnap.val();
-                
-                // UPDATE HEADER UI BASED ON LIVE STATUS
-                if(currentSess) {
-                    badge.innerText = "🔴 LIVE";
-                    badge.className = "text-xs font-bold px-3 py-1 rounded-full border border-red-500 text-red-500 bg-red-900/20";
-                } else {
-                    badge.innerText = "OFFLINE";
-                    badge.className = "text-xs font-bold px-3 py-1 rounded-full border border-zinc-600 text-zinc-400 bg-zinc-800";
-                }
-
-                // DETERMINE PATH TO FETCH
-                let fetchPath = 'queue'; // Default Class Queue
-                
-                if (tab === 'daily') {
-                    if (currentSess) {
-                        fetchPath = `dailyQueue/${currentSess}`;
-                        explainer.innerHTML = `<i class="fas fa-broadcast-tower text-red-400 mr-1"></i> <strong>Daily Show Queue</strong><br>These songs are lined up for TODAY'S live show. This list clears when the show ends.`;
-                        explainer.className = "mb-4 p-3 rounded-xl bg-red-900/10 border border-red-900/30 text-xs text-red-200 leading-relaxed";
-                    } else {
-                        l.innerHTML = '<div class="text-center text-zinc-500 text-sm mt-6 italic">Show is offline.<br>Check the <strong>Class Queue</strong>.</div>';
-                        explainer.innerHTML = "Show is offline. No Daily Queue active.";
-                        explainer.className = "mb-4 p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-500 leading-relaxed";
-                        return; // Stop here, don't fetch
-                    }
-                } else {
-                    // Class Queue Tab
-                    fetchPath = 'queue';
-                    explainer.innerHTML = `<i class="fas fa-archive text-blue-400 mr-1"></i> <strong>Class Queue</strong><br>The master backlog. Songs here are saved until the Professor pulls them for a show.`;
-                    explainer.className = "mb-4 p-3 rounded-xl bg-blue-900/10 border border-blue-900/30 text-xs text-blue-200 leading-relaxed";
-                }
-
-                // FETCH DATA
-                App.db.ref(fetchPath).on('value', s => {
-                    l.innerHTML = '';
-                    const v = s.val();
-                    if(v) {
-                        Object.values(v).sort((a,b)=>(a.timestamp||0)-(b.timestamp||0)).forEach((item, i) => {
-                            const div = document.createElement('div');
-                            div.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center relative overflow-hidden mb-2 group hover:border-zinc-600 transition-colors";
-                            
-                            // Highlight first item in Daily Queue only
-                            if(tab === 'daily' && i===0) div.innerHTML += '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_10px_#22c55e]"></div>';
-
-                            div.innerHTML += `
-                                <div class="pl-2 flex-1 min-w-0 mr-2">
-                                    <div class="font-bold text-white text-sm truncate">${item.artist}</div>
-                                    <div class="text-xs text-zinc-500 truncate">${item.song}</div>
-                                </div>
-                                <div class="flex flex-col items-end gap-1">
-                                     <button onclick="App.data.viewUser('${item.uid}')" class="text-[10px] bg-zinc-950 border border-zinc-800 px-3 py-1 rounded-full text-zinc-400 font-bold hover:text-white transition-colors shrink-0">${item.user}</button>
-                                     <span class="text-[9px] text-zinc-600 font-mono">${new Date(item.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
-                                </div>
-                            `;
-                            l.appendChild(div);
+       loadQueueList: function() {// --- NEW: CHECK PASS INVENTORY ---
+            if(!State.user.isAnon) {
+                App.db.ref(`users/${State.user.uid}/hallPasses`).on('value', s => {
+                    const passes = s.val();
+                    let count = 0;
+                    if(passes) {
+                        Object.values(passes).forEach(p => {
+                            if(p.expiresAt > Date.now()) count++;
                         });
+                    }
+                    
+                    const container = document.getElementById('hall-pass-toggle-container');
+                    const countLabel = document.getElementById('user-pass-count');
+                    
+                    if(count > 0) {
+                        if(container) container.classList.remove('hidden');
+                        if(countLabel) countLabel.innerText = count;
                     } else {
-                        l.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-4 italic">List is empty.</div>';
+                        if(container) container.classList.add('hidden');
                     }
                 });
-            });
-        },
-       loadChat: function(chan) {
-            if(State.user.isAnon) return document.getElementById('chat-feed').innerHTML = '<div class="text-center text-zinc-600 mt-10">Sign in to join the discussion.</div>';
-            
-            const f = document.getElementById('chat-feed');
-            f.innerHTML = '';
-            
-            const isAdmin = State.user.role === 'admin';
+            }
+            // --- END NEW ---
+    const l = document.getElementById('queue-list'); 
+    if(!l) return;
+    l.innerHTML = '<div class="spinner border-zinc-500 mx-auto mt-4"></div>';
 
-            App.db.ref('channels/' + chan).limitToLast(50).on('child_added', s => {
-                const m = s.val();
-                const key = s.key;
-                const div = document.createElement('div');
-                const isMe = m.uid === State.user.uid;
-                
-                div.className = `chat-row ${isMe ? 'mine' : 'other'}`;
-                
-                // Admin Delete Button
-                let del = '';
-                if(isAdmin) {
-                    del = `<span onclick="App.admin.deleteChat('${chan}', '${key}')" class="ml-2 text-[10px] text-zinc-600 hover:text-red-500 cursor-pointer"><i class="fas fa-trash"></i></span>`;
-                }
+    const tab = State.activeQueueTab || 'daily'; // Default to daily
+    const badge = document.getElementById('queue-status-badge');
+    const explainer = document.getElementById('queue-explainer');
 
-                let html = '';
-                if(!isMe) {
-                    html += `
-                        <div>
-                            <div class="chat-meta mb-1 cursor-pointer hover:text-white flex items-center gap-1">
-                                <span onclick="App.data.viewUser('${m.uid}')">${m.user}</span>
-                                ${del}
+    App.db.ref('streamState/currentSession').once('value', sessSnap => {
+        const currentSess = sessSnap.val();
+        
+        // UPDATE HEADER UI BASED ON LIVE STATUS
+        if(currentSess) {
+            badge.innerText = "閥 LIVE";
+            badge.className = "text-xs font-bold px-3 py-1 rounded-full border border-red-500 text-red-500 bg-red-900/20";
+            // Show Header Badge (Step 1 from previous instruction)
+            const hb = document.getElementById('header-live-badge');
+            if(hb) hb.classList.remove('hidden');
+        } else {
+            badge.innerText = "OFFLINE";
+            badge.className = "text-xs font-bold px-3 py-1 rounded-full border border-zinc-600 text-zinc-400 bg-zinc-800";
+            // Hide Header Badge
+            const hb = document.getElementById('header-live-badge');
+            if(hb) hb.classList.add('hidden');
+        }
+
+        // DETERMINE PATH TO FETCH
+        let fetchPath = 'queue'; // Default Class Queue
+        
+        if (tab === 'daily') {
+            if (currentSess) {
+                fetchPath = `dailyQueue/${currentSess}`;
+                explainer.innerHTML = `<i class="fas fa-broadcast-tower text-red-400 mr-1"></i> <strong>Daily Show Queue</strong><br>These songs are lined up for TODAY'S live show. This list clears when the show ends.`;
+                explainer.className = "mb-4 p-3 rounded-xl bg-red-900/10 border border-red-900/30 text-xs text-red-200 leading-relaxed";
+            } else {
+                l.innerHTML = '<div class="text-center text-zinc-500 text-sm mt-6 italic">Show is offline.<br>Check the <strong>Class Queue</strong>.</div>';
+                explainer.innerHTML = "Show is offline. No Daily Queue active.";
+                explainer.className = "mb-4 p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-zinc-500 leading-relaxed";
+                return; // Stop here, don't fetch
+            }
+        } else {
+            // Class Queue Tab
+            fetchPath = 'queue';
+            explainer.innerHTML = `<i class="fas fa-archive text-blue-400 mr-1"></i> <strong>Class Queue</strong><br>The master backlog. Songs here are saved until the Professor pulls them for a show.`;
+            explainer.className = "mb-4 p-3 rounded-xl bg-blue-900/10 border border-blue-900/30 text-xs text-blue-200 leading-relaxed";
+        }
+
+        // FETCH DATA
+        App.db.ref(fetchPath).on('value', s => {
+            l.innerHTML = '';
+            const v = s.val();
+            if(v) {
+                Object.keys(v).forEach((key, i) => {
+                    const item = v[key];
+                    // Sort locally if needed, usually Firebase order is by key which is timestamp-ish
+                    
+                    const div = document.createElement('div');
+                    div.className = "bg-zinc-900 p-4 rounded-2xl border border-zinc-800 flex justify-between items-center relative overflow-hidden mb-2 group hover:border-zinc-600 transition-colors";
+                    
+                    // Highlight first item in Daily Queue only
+                    if(tab === 'daily' && i===0) div.innerHTML += '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500 shadow-[0_0_10px_#22c55e]"></div>';
+
+                    // CHECK IF IT IS MY SONG
+                    const isMine = item.uid === State.user.uid;
+                    let controls = '';
+                    
+                    if(isMine) {
+                        controls = `
+                            <div class="flex items-center gap-3 border-l border-zinc-700 pl-3 ml-2">
+                                <button onclick="App.data.editQueueItem('${key}')" class="text-zinc-500 hover:text-white"><i class="fas fa-pen"></i></button>
+                                <button onclick="App.data.removeQueueItem('${key}')" class="text-zinc-500 hover:text-red-500"><i class="fas fa-times"></i></button>
                             </div>
-                            <div class="chat-bubble">${m.text}</div>
+                        `;
+                    } else {
+                        // If not mine, show the user's name tag
+                        controls = `
+                            <div class="flex flex-col items-end gap-1 ml-2">
+                                <button onclick="App.data.viewUser('${item.uid}')" class="text-[10px] bg-zinc-950 border border-zinc-800 px-3 py-1 rounded-full text-zinc-400 font-bold hover:text-white transition-colors shrink-0">${item.user}</button>
+                                <span class="text-[9px] text-zinc-600 font-mono">${new Date(item.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
+                            </div>
+                        `;
+                    }
+
+                    div.innerHTML += `
+                        <div class="pl-2 flex-1 min-w-0">
+                            <div class="font-bold text-white text-sm truncate">${item.artist}</div>
+                            <div class="text-xs text-zinc-500 truncate">${item.song}</div>
+                        </div>
+                        ${controls}
+                    `;
+                    l.appendChild(div);
+                });
+            } else {
+                l.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-4 italic">List is empty.</div>';
+            }
+        });
+    });
+},
+     loadChat: function(chan) {
+    if(State.user.isAnon) return document.getElementById('chat-feed').innerHTML = '<div class="text-center text-zinc-600 mt-10">Sign in to join the discussion.</div>';
+    
+    const f = document.getElementById('chat-feed');
+    // Only clear if switching channels (check if content exists and channel matches)
+    if(f.dataset.chan !== chan) {
+        f.innerHTML = '';
+        f.dataset.chan = chan;
+    }
+    
+    const isAdmin = State.user.role === 'admin';
+
+    // 1. ADDED: Unique ID for each message row
+    App.db.ref('channels/' + chan).limitToLast(50).on('child_added', s => {
+        const m = s.val();
+        const key = s.key;
+        
+        // Prevent duplicates
+        if(document.getElementById('msg-'+key)) return;
+
+        const div = document.createElement('div');
+        div.id = 'msg-' + key; // <--- Unique ID
+        const isMe = m.uid === State.user.uid;
+        
+        div.className = `chat-row ${isMe ? 'mine' : 'other'}`;
+        
+        let del = '';
+        if(isAdmin) {
+            del = `<span onclick="App.admin.deleteChat('${chan}', '${key}')" class="ml-2 text-[10px] text-zinc-600 hover:text-red-500 cursor-pointer"><i class="fas fa-trash"></i></span>`;
+        }
+
+        let html = '';
+        if(!isMe) {
+            html += `
+                <div>
+                    <div class="chat-meta mb-1 cursor-pointer hover:text-white flex items-center gap-1">
+                        <span onclick="App.data.viewUser('${m.uid}')">${m.user}</span>
+                        ${del}
+                    </div>
+                    <div class="chat-bubble">${m.text}</div>
+                </div>
+            `;
+        } else {
+            html += `<div class="chat-bubble">${m.text}</div>`;
+            if(isAdmin) html += `<div class="text-right">${del}</div>`;
+        }
+        
+        div.innerHTML = html;
+        f.appendChild(div);
+        f.scrollTop = f.scrollHeight;
+    });
+    
+    // 2. FIXED: REMOVE ONLY THE DELETED ELEMENT (No Refresh)
+    App.db.ref('channels/' + chan).on('child_removed', s => {
+        const el = document.getElementById('msg-' + s.key);
+        if(el) el.remove(); // Smooth removal, no flicker
+    });
+},
+
+loadFeed: function() {
+    if(State.user.isAnon) return document.getElementById('feed-list').innerHTML = '<div class="text-center text-zinc-600 mt-10">Sign in to view feed.</div>';
+    
+    const f = document.getElementById('feed-list');
+    
+    // Helper: Blue Mentions
+    const formatText = (text) => text ? text.replace(/@(\w+)/g, '<span class="text-blue-400 font-bold">@$1</span>') : "";
+
+    App.db.ref('posts').limitToLast(50).on('value', s => {
+        f.innerHTML = '';
+        const v = s.val();
+        const amIAdmin = State.user.role === 'admin'; 
+
+        if(v) {
+            // 1. Sort Posts
+            let allPosts = Object.keys(v).map(k => ({ id: k, ...v[k] }));
+            allPosts.sort((a,b) => {
+                if (a.pinned && !b.pinned) return -1;
+                if (!a.pinned && b.pinned) return 1;
+                return b.timestamp - a.timestamp;     
+            });
+
+            allPosts.forEach(p => {
+                const key = p.id; 
+                
+                // 2. CHECK CACHE (The Flicker Fix)
+                // We check if we already know this user. If yes, use data instantly.
+                const cachedUser = State.userCache[p.uid];
+                
+                // Prepare default values (Student / No Avatar)
+                let u = cachedUser || { role: 'student', avatar: null, handle: p.user };
+                
+                // 3. Setup IDs
+                const cardId = `card-${key}`;
+                const avatarId = `avatar-${key}`;
+                const initId = `init-${key}`;
+                const nameId = `name-${key}`;
+
+                // 4. PRE-CALCULATE STYLES (Instant)
+                const isPosterAdmin = u.role === 'admin';
+                const adminClass = isPosterAdmin ? 'admin-post' : ''; 
+                const adminBadge = isPosterAdmin ? '<div class="admin-badge"><i class="fas fa-crown mr-1"></i>FACULTY</div>' : '';
+                const pinBorder = p.pinned ? 'border-l-4 border-yellow-500' : '';
+                let pinBadge = p.pinned ? '<div class="mb-2 text-[10px] font-bold text-yellow-500 uppercase tracking-widest"><i class="fas fa-thumbtack mr-1"></i> Pinned Post</div>' : '';
+
+                // 5. Setup Avatar (Instant if cached)
+                // If we have the avatar, show it NOW. If not, hide it.
+                const imgClass = u.avatar ? '' : 'hidden';
+                const initClass = u.avatar ? 'hidden' : '';
+                const avatarSrc = u.avatar || '';
+
+                const div = document.createElement('div');
+                div.id = cardId;
+                div.className = `glass-card ${pinBorder} ${adminClass}`; 
+
+                // --- SONG PLAYER ---
+                let songHtml = '';
+                if(p.songAttachment) {
+                    const parts = p.songAttachment.split('-');
+                    const artist = parts[0].trim();
+                    const title = parts[1] ? parts[1].trim() : 'Track';
+                    const k = `${artist}###${title}`;
+                    const isFav = State.favorites && State.favorites[k];
+                    const favClass = isFav ? 'text-red-500' : 'text-gray-400';
+                    const isMine = (p.uid === State.user.uid);
+                    
+                    const gradeBtn = !isMine ? 
+                        `<button onclick="App.ui.openGrading('${key}', '${title}', '${artist}')" class="text-[10px] font-bold text-white bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-all border border-white/10 flex items-center gap-2 shadow-sm"><i class="fas fa-sliders-h"></i> GRADE</button>` 
+                        : `<span class="text-[9px] text-indigo-200 font-bold border border-white/10 bg-white/5 px-2 py-1 rounded">YOUR TRACK</span>`;
+                    
+                    const query = encodeURIComponent(`${artist} ${title}`);
+
+                    songHtml = `
+                        <div class="bg-white/5 rounded-2xl p-4 flex flex-col gap-3 border border-white/10 mt-4 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.6)] shrink-0">
+                                    <i class="fas fa-music text-white ml-1"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <div class="min-w-0 mr-2">
+                                            <div class="font-bold text-white truncate text-sm">${title}</div>
+                                            <div class="text-xs text-indigo-200 truncate">${artist}</div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            ${gradeBtn}
+                                            <button onclick="App.data.addToFav('${k}', this)" class="${favClass} hover:text-red-400 transition-colors p-1"><i class="fas fa-heart"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 border-t border-white/10 pt-2 mt-1">
+                                <button onclick="window.open('https://open.spotify.com/search/${query}', '_blank')" class="flex-1 bg-white/5 py-2 rounded-lg text-[#1db954] font-bold text-[10px] hover:bg-white/10 transition-colors flex items-center justify-center gap-1"><i class="fab fa-spotify"></i></button>
+                                <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="flex-1 bg-white/5 py-2 rounded-lg text-[#fa2d48] font-bold text-[10px] hover:bg-white/10 transition-colors flex items-center justify-center gap-1"><i class="fab fa-apple"></i></button>
+                                <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="flex-1 bg-white/5 py-2 rounded-lg text-[#ff0000] font-bold text-[10px] hover:bg-white/10 transition-colors flex items-center justify-center gap-1"><i class="fab fa-youtube"></i></button>
+                            </div>
                         </div>
                     `;
-                } else {
-                    html += `<div class="chat-bubble">${m.text}</div>`;
-                    if(isAdmin) html += `<div class="text-right">${del}</div>`; // Allow admin to delete own msgs easily
                 }
+
+                // --- META ---
+                const likes = p.likes ? Object.keys(p.likes).length : 0;
+                const iLiked = p.likes && p.likes[State.user.uid];
+                const likeIconClass = iLiked ? 'fas fa-heart text-red-500' : 'far fa-heart text-gray-300';
                 
-                div.innerHTML = html;
+                const comments = p.comments ? Object.values(p.comments) : [];
+                let commentsHtml = '';
+                comments.forEach(c => {
+                    commentsHtml += `<div class="text-[11px] mb-1 text-gray-300"><span class="font-bold text-white">${c.user}:</span> ${formatText(c.text)}</div>`;
+                });
+
+                // Admin Controls
+                let adminControls = '';
+                if(amIAdmin) {
+                    const pinColor = p.pinned ? 'text-yellow-500' : 'text-zinc-600';
+                    adminControls = `
+                        <div class="ml-auto flex gap-3">
+                            <button onclick="App.admin.togglePin('${key}', ${p.pinned || false})" class="${pinColor} hover:text-white"><i class="fas fa-thumbtack"></i></button>
+                            <button onclick="App.admin.deletePost('${key}')" class="text-red-400 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                }
+
+                const fmtPostText = formatText(p.text);
+
+                // --- RENDER (With Pre-Filled Avatar) ---
+                div.innerHTML = `
+                    ${pinBadge}
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-full avatar-glow overflow-hidden bg-zinc-800 shrink-0 cursor-pointer shadow-lg" onclick="App.data.viewUser('${p.uid}')">
+                            <img id="${avatarId}" src="${avatarSrc}" class="w-full h-full object-cover ${imgClass}" alt="${p.user}">
+                            <div id="${initId}" class="w-full h-full flex items-center justify-center font-bold text-white bg-indigo-600 ${initClass}">${p.user[0]}</div>
+                        </div>
+                        <div id="${nameId}">
+                            ${adminBadge}
+                            <h3 class="font-bold text-lg text-gradient cursor-pointer" onclick="App.data.viewUser('${p.uid}')">${p.user}</h3>
+                            <p class="text-xs text-indigo-200">${new Date(p.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</p>
+                        </div>
+                        ${adminControls}
+                    </div>
+
+                    <p class="text-gray-200 font-light leading-relaxed mb-2">${fmtPostText}</p>
+                    ${songHtml}
+
+                    <div class="flex gap-6 mt-6 px-2 border-t border-white/5 pt-4">
+                        <button onclick="App.data.togglePostLike('${key}')" class="flex items-center gap-2 text-sm hover:text-white transition-colors group">
+                            <i class="${likeIconClass} group-active:scale-125 transition-transform"></i> ${likes || ''}
+                        </button>
+                        <button onclick="App.ui.toggleComments('${key}')" class="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
+                            <i class="far fa-comment-alt"></i> ${comments.length || ''}
+                        </button>
+                    </div>
+
+                    <div id="comments-${key}" class="comment-section mt-4 pt-4 border-t border-white/10 hidden">
+                        <div class="space-y-2 mb-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">${commentsHtml}</div>
+                        <div class="flex gap-2 bg-white/5 p-1 rounded-full border border-white/10 backdrop-blur-md">
+                            <input id="inp-cmt-${key}" placeholder="Add comment... (@user)" class="flex-1 bg-transparent text-xs text-white px-3 outline-none placeholder-gray-500">
+                            <button onclick="App.data.sendComment('${key}')" class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-lg hover:bg-indigo-500 transition-colors"><i class="fas fa-arrow-up text-[10px]"></i></button>
+                        </div>
+                    </div>
+                `;
                 f.appendChild(div);
-                f.scrollTop = f.scrollHeight;
-            });
-            
-            // Handle removals in real-time
-            App.db.ref('channels/' + chan).on('child_removed', s => {
-                // Ideally reload or remove specific element, for simplicity reload
-                // But to avoid flicker we can just ignore or remove if we tracked IDs
-                // For this simple version, reload is safest
-                f.innerHTML = ''; 
-                App.data.loadChat(chan); 
-            });
-        },
 
-        loadFeed: function() {
-            if(State.user.isAnon) return document.getElementById('feed-list').innerHTML = '<div class="text-center text-zinc-600 mt-10">Sign in to view feed.</div>';
-            
-            const f = document.getElementById('feed-list');
-            App.db.ref('posts').limitToLast(25).on('value', s => {
-                f.innerHTML = '';
-                const v = s.val();
-                const isAdmin = State.user.role === 'admin'; // Check admin for delete buttons
-
-                if(v) {
-                    Object.keys(v).reverse().forEach(key => {
-                        const p = v[key];
-                        // FEED ITEM CONSTRUCTION
-// --- START OF NEW GLASS CARD LOGIC (Clean Player + Real Avatars) ---
-                        const div = document.createElement('div');
-                        div.className = "glass-card"; // Apply the Glass Prism style
+                // 6. CACHE MISS? FETCH & SAVE
+                // If we didn't have the user in memory, fetch it now for next time
+                if(!cachedUser) {
+                    App.db.ref('users/' + p.uid).once('value', s => {
+                        const fetched = s.val() || { role: 'student', handle: p.user };
                         
-                        let songHtml = '';
-                        
-                        // --- SONG ATTACHMENT LOGIC ---
-                        if(p.songAttachment) {
-                            const parts = p.songAttachment.split('-');
-                            const artist = parts[0].trim();
-                            const title = parts[1] ? parts[1].trim() : 'Track';
-                            
-                            // Key for Favorites (The Crate)
-                            const k = `${artist}###${title}`;
-                            const isFav = State.favorites && State.favorites[k];
-                            const favClass = isFav ? 'text-red-500' : 'text-gray-400';
+                        // SAVE TO MEMORY
+                        State.userCache[p.uid] = fetched;
 
-                            // GRADE BUTTON LOGIC
-                            const isMine = (p.uid === State.user.uid);
-                            const gradeBtn = !isMine ? 
-                                `<button onclick="App.ui.openGrading('${key}', '${title}', '${artist}')" class="text-[10px] font-bold text-white bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-all border border-white/10 flex items-center gap-2 shadow-sm"><i class="fas fa-sliders-h"></i> GRADE</button>` 
-                                : `<span class="text-[9px] text-indigo-200 font-bold border border-white/10 bg-white/5 px-2 py-1 rounded">YOUR TRACK</span>`;
+                        // Update the UI one last time
+                        const img = document.getElementById(avatarId);
+                        const init = document.getElementById(initId);
+                        const nameBox = document.getElementById(nameId);
+                        const card = document.getElementById(`card-${key}`);
 
-                            // QUERY FOR LINKS
-                            const query = encodeURIComponent(`${artist} ${title}`);
-
-                            // THE PLAYER UI (Clean: No Progress Bar, Music Icon)
-                            songHtml = `
-                                <div class="bg-white/5 rounded-2xl p-4 flex flex-col gap-3 border border-white/10 mt-4 transition-colors">
-                                    <div class="flex items-center gap-4">
-                                        <!-- Static Music Icon -->
-                                        <div class="w-12 h-12 rounded-full bg-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.6)] shrink-0">
-                                            <i class="fas fa-music text-white ml-1"></i>
-                                        </div>
-                                        
-                                        <!-- Track Info -->
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex justify-between items-start">
-                                                <div class="min-w-0 mr-2">
-                                                    <div class="font-bold text-white truncate text-sm">${title}</div>
-                                                    <div class="text-xs text-indigo-200 truncate">${artist}</div>
-                                                </div>
-                                                
-                                                <!-- ACTIONS: Grade & Favorite Heart -->
-                                                <div class="flex items-center gap-2">
-                                                    ${gradeBtn}
-                                                    <button onclick="App.data.addToFav('${k}', this)" class="${favClass} hover:text-red-400 transition-colors p-1" title="Add to Crate">
-                                                        <i class="fas fa-heart"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- EXTERNAL LINKS BUTTONS -->
-                                    <div class="flex gap-2 border-t border-white/10 pt-2 mt-1">
-                                        <button onclick="window.open('https://open.spotify.com/search/${query}', '_blank')" class="flex-1 bg-white/5 py-2 rounded-lg text-[#1db954] font-bold text-[10px] hover:bg-white/10 transition-colors flex items-center justify-center gap-1 shadow-sm"><i class="fab fa-spotify"></i> Spotify</button>
-                                        <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="flex-1 bg-white/5 py-2 rounded-lg text-[#fa2d48] font-bold text-[10px] hover:bg-white/10 transition-colors flex items-center justify-center gap-1 shadow-sm"><i class="fab fa-apple"></i> Apple</button>
-                                        <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="flex-1 bg-white/5 py-2 rounded-lg text-[#ff0000] font-bold text-[10px] hover:bg-white/10 transition-colors flex items-center justify-center gap-1 shadow-sm"><i class="fab fa-youtube"></i> Tube</button>
-                                    </div>
-                                </div>
-                            `;
+                        if(fetched.avatar && img && init) {
+                            img.src = fetched.avatar;
+                            img.classList.remove('hidden');
+                            init.classList.add('hidden');
                         }
-
-                        // --- POST META LOGIC ---
-                        const likes = p.likes ? Object.keys(p.likes).length : 0;
-                        const iLiked = p.likes && p.likes[State.user.uid];
-                        const likeIconClass = iLiked ? 'fas fa-heart text-red-500' : 'far fa-heart text-gray-300';
-                        
-                        const comments = p.comments ? Object.values(p.comments) : [];
-                        const commentCount = comments.length;
-                        
-                        let commentsHtml = '';
-                        comments.forEach(c => {
-                             commentsHtml += `<div class="text-[11px] mb-1 text-gray-300"><span class="font-bold text-white">${c.user}:</span> ${c.text}</div>`;
-                        });
-
-                        let deleteBtn = '';
-                        if(isAdmin) {
-                            deleteBtn = `<button onclick="App.admin.deletePost('${key}')" class="text-red-400 text-xs ml-auto opacity-70 hover:opacity-100"><i class="fas fa-trash"></i></button>`;
-                        }
-
-                        // --- FINAL HTML CONSTRUCTION ---
-                        // Note: We use unique IDs for the avatar to update it asynchronously
-                        const avatarId = `avatar-${key}`;
-                        const initId = `init-${key}`;
-
-                        div.innerHTML = `
-                            <!-- Header -->
-                            <div class="flex items-center gap-4 mb-4">
-                                <div class="w-12 h-12 rounded-full avatar-glow overflow-hidden bg-zinc-800 shrink-0 cursor-pointer shadow-lg" onclick="App.data.viewUser('${p.uid}')">
-                                    <img id="${avatarId}" class="w-full h-full object-cover hidden" alt="${p.user}">
-                                    <div id="${initId}" class="w-full h-full flex items-center justify-center font-bold text-white bg-indigo-600">${p.user[0]}</div>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-gradient cursor-pointer" onclick="App.data.viewUser('${p.uid}')">${p.user}</h3>
-                                    <p class="text-xs text-indigo-200">${new Date(p.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</p>
-                                </div>
-                                ${deleteBtn}
-                            </div>
-
-                            <!-- Content -->
-                            <p class="text-gray-200 font-light leading-relaxed mb-2">${p.text}</p>
-                            
-                            <!-- Player Block -->
-                            ${songHtml}
-
-                            <!-- Social Actions (Forward Button Removed) -->
-                            <div class="flex gap-6 mt-6 px-2 border-t border-white/5 pt-4">
-                                <button onclick="App.data.togglePostLike('${key}')" class="flex items-center gap-2 text-sm hover:text-white transition-colors group">
-                                    <i class="${likeIconClass} group-active:scale-125 transition-transform"></i> ${likes || ''}
-                                </button>
-                                <button onclick="App.ui.toggleComments('${key}')" class="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
-                                    <i class="far fa-comment-alt"></i> ${commentCount || ''}
-                                </button>
-                            </div>
-
-                            <!-- Comment Section -->
-                            <div id="comments-${key}" class="comment-section mt-4 pt-4 border-t border-white/10 hidden">
-                                <div class="space-y-2 mb-3 max-h-32 overflow-y-auto pr-2 custom-scrollbar">${commentsHtml}</div>
-                                <div class="flex gap-2 bg-white/5 p-1 rounded-full border border-white/10 backdrop-blur-md">
-                                    <input id="inp-cmt-${key}" placeholder="Add comment..." class="flex-1 bg-transparent text-xs text-white px-3 outline-none placeholder-gray-500">
-                                    <button onclick="App.data.sendComment('${key}')" class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-lg hover:bg-indigo-500 transition-colors"><i class="fas fa-arrow-up text-[10px]"></i></button>
-                                </div>
-                            </div>
-                        `;
-                        f.appendChild(div);
-
-                        // --- FETCH AVATAR (Post-Append) ---
-                        // This fetches the real image and swaps it in
-                        App.db.ref('users/' + p.uid + '/avatar').once('value', s => {
-                            const url = s.val();
-                            if(url) {
-                                const img = document.getElementById(avatarId);
-                                const init = document.getElementById(initId);
-                                if(img && init) {
-                                    img.src = url;
-                                    img.classList.remove('hidden');
-                                    init.classList.add('hidden');
-                                }
+                        if(fetched.role === 'admin') {
+                            if(card) card.classList.add('admin-post');
+                            if(nameBox && !nameBox.querySelector('.admin-badge')) {
+                                nameBox.insertAdjacentHTML('afterbegin', '<div class="admin-badge"><i class="fas fa-crown mr-1"></i>FACULTY</div>');
                             }
-                        });
-                        // --- END OF NEW GLASS CARD LOGIC ---                        
-});
-                } else {
-                    f.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-8 italic">No vibes yet. Be the first.</div>';
+                        }
+                    });
                 }
             });
-        },
+        } else {
+            f.innerHTML = '<div class="text-center text-zinc-600 text-sm mt-8 italic">No vibes yet. Be the first.</div>';
+        }
+    });
+},
 
 // NEW: CLASS SYLLABUS LOGIC (Pro Edition)
-      loadSyllabus: function() {
-            const list = document.getElementById('syllabus-list');
-            const tools = document.getElementById('syllabus-tools');
-            const toolsTitle = document.getElementById('syl-tools-title');
-            
-            list.innerHTML = '<div class="spinner border-zinc-500 mx-auto"></div>';
-            
-            // 1. Permission Check
-            const isAux = State.activeChan === 'aux';
-            const isAdmin = State.user && State.user.role === 'admin';
-            
-            if (isAdmin || (isAux && !State.user.isAnon)) {
-                tools.classList.remove('hidden');
-                toolsTitle.innerText = isAux ? "Student Aux Cord (Drop a Track)" : "Professor Tools (Rapid Entry)";
-            } else {
-                tools.classList.add('hidden');
-            }
+    loadSyllabus: function() {
+    const list = document.getElementById('syllabus-list');
+    const tools = document.getElementById('syllabus-tools');
+    const toolsTitle = document.getElementById('syl-tools-title');
+    
+    if(list.children.length === 0) list.innerHTML = '<div class="spinner border-zinc-500 mx-auto"></div>';
+    
+    // Permission Check
+    const isAux = State.activeChan === 'aux';
+    const isAdmin = State.user && State.user.role === 'admin';
+    
+    if (isAdmin || (isAux && !State.user.isAnon)) {
+        tools.classList.remove('hidden');
+        toolsTitle.innerText = isAux ? "Student Aux Cord (Drop a Track)" : "Professor Tools (Rapid Entry)";
+    } else {
+        tools.classList.add('hidden');
+    }
 
-            // 2. Load Syllabus
-            const classId = State.activeChan; 
+    const classId = State.activeChan; 
+    
+    App.db.ref('syllabus/' + classId).limitToLast(50).on('value', s => {
+        const v = s.val();
+        
+        if(list.querySelector('.spinner')) list.innerHTML = '';
+
+        if(v) {
+            const validIds = new Set();
             
-            App.db.ref('syllabus/' + classId).limitToLast(50).on('value', s => {
-                list.innerHTML = '';
-                const v = s.val();
-                if(v) {
-                    Object.keys(v).reverse().forEach(key => {
-                        const i = v[key];
-                        // Generate Search Links
-                        const query = encodeURIComponent(i.artist + ' ' + i.song);
-                        const favKey = `${i.artist}###${i.song}`;
-                        
-                        // Check if I already liked this (Heart Status)
-                        const isLiked = State.favorites && State.favorites[favKey];
-                        const heartColor = isLiked ? 'text-red-500' : 'text-zinc-600 hover:text-red-400';
-                        
-                        const div = document.createElement('div');
-                        // Style: Yellow for Aux, Blue-Gray for Class
-                        const borderClass = isAux ? 'border-yellow-500' : 'border-zinc-600';
-                        
-                        // Grade Button Logic
-                        const gradeBtn = `<button onclick="App.ui.openGrading('${key}', '${i.song}', '${i.artist}', 'syllabus')" class="text-[10px] font-bold text-white bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-all border border-white/10 flex items-center gap-2 shadow-sm"><i class="fas fa-sliders-h"></i> GRADE</button>`;
-                        
-                        // Admin Delete Button
-                        let deleteBtn = '';
-                        if(isAdmin) {
-                            deleteBtn = `<button onclick="App.admin.deleteSyllabusItem('${classId}', '${key}')" class="w-8 h-8 bg-red-900/50 rounded-full flex items-center justify-center text-red-400 hover:text-white hover:bg-red-600 transition-colors"><i class="fas fa-trash text-xs"></i></button>`;
-                        }
+            // Reverse order
+            Object.keys(v).reverse().forEach(key => {
+                const i = v[key];
+                const rowId = `syl-${key}`;
+                validIds.add(rowId);
 
-                        div.className = `glass-card p-4 rounded-xl border-l-4 ${borderClass} relative overflow-hidden flex flex-col gap-3 mb-3`;
-                        
-                        div.innerHTML = `
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <div class="font-black text-lg text-white uppercase italic leading-none mb-1">${i.artist}</div>
-                                    <div class="text-sm text-blue-400 font-bold">"${i.song}"</div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    ${gradeBtn}
-                                    <button onclick="App.data.addToFav('${favKey}', this)" class="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center ${heartColor} transition-colors shadow-lg">
-                                        <i class="fas fa-heart text-sm"></i>
-                                    </button>
-                                    ${deleteBtn}
-                                </div>
-                            </div>
+                const query = encodeURIComponent(i.artist + ' ' + i.song);
+                const favKey = `${i.artist}###${i.song}`;
+                const isLiked = State.favorites && State.favorites[favKey];
+                const heartColor = isLiked ? 'text-red-500' : 'text-zinc-600 hover:text-red-400';
+                const borderClass = isAux ? 'border-yellow-500' : 'border-zinc-600';
+                
+                const gradeBtn = `<button onclick="App.ui.openGrading('${key}', '${i.song}', '${i.artist}', 'syllabus')" class="text-[10px] font-bold text-white bg-white/10 px-3 py-1.5 rounded-full hover:bg-white/20 transition-all border border-white/10 flex items-center gap-2 shadow-sm"><i class="fas fa-sliders-h"></i> GRADE</button>`;
+                
+                let deleteBtn = '';
+                if(isAdmin) {
+                    deleteBtn = `<button onclick="App.admin.deleteSyllabusItem('${classId}', '${key}')" class="w-8 h-8 bg-red-900/50 rounded-full flex items-center justify-center text-red-400 hover:text-white hover:bg-red-600 transition-colors"><i class="fas fa-trash text-xs"></i></button>`;
+                }
 
-                            <div class="flex items-center justify-between mt-1">
-                                <span class="text-[9px] bg-zinc-800 text-zinc-500 px-2 py-1 rounded font-bold uppercase tracking-wider">${isAux ? 'Aux Pick' : 'Assignment'}</span>
-                                
-                                <div class="flex gap-2">
-                                    <button onclick="window.open('https://open.spotify.com/search/${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#1db954] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-spotify"></i></button>
-                                    <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#fa2d48] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-apple"></i></button>
-                                    <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#ff0000] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-youtube"></i></button>
-                                </div>
-                            </div>
-                        `;
-                        list.appendChild(div);
-                    });
+                const htmlContent = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="font-black text-lg text-white uppercase italic leading-none mb-1 text-truncate">${i.artist}</div>
+                            <div class="text-sm text-blue-400 font-bold">"${i.song}"</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${gradeBtn}
+                            <button onclick="App.data.addToFav('${favKey}', this)" class="w-8 h-8 bg-zinc-800 rounded-full flex items-center justify-center ${heartColor} transition-colors shadow-lg">
+                                <i class="fas fa-heart text-sm"></i>
+                            </button>
+                            ${deleteBtn}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-[9px] bg-zinc-800 text-zinc-500 px-2 py-1 rounded font-bold uppercase tracking-wider">${isAux ? 'Aux Pick' : 'Assignment'}</span>
+                        <div class="flex gap-2">
+                            <button onclick="window.open('https://open.spotify.com/search/${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#1db954] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-spotify"></i></button>
+                            <button onclick="window.open('https://music.apple.com/us/search?term=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#fa2d48] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-apple"></i></button>
+                            <button onclick="window.open('https://www.youtube.com/results?search_query=${query}', '_blank')" class="w-8 h-8 rounded-full bg-zinc-950 text-[#ff0000] hover:bg-white flex items-center justify-center transition-colors"><i class="fab fa-youtube"></i></button>
+                        </div>
+                    </div>
+                `;
+
+                let div = document.getElementById(rowId);
+                
+                if (div) {
+                    // Update
+                    div.className = `glass-card p-4 rounded-xl border-l-4 ${borderClass} relative overflow-hidden flex flex-col gap-3 mb-3`;
+                    if(div.innerHTML !== htmlContent) div.innerHTML = htmlContent;
                 } else {
-                    list.innerHTML = '<div class="text-center text-zinc-500 italic mt-10">No assignments yet.</div>';
+                    // Create
+                    div = document.createElement('div');
+                    div.id = rowId;
+                    div.className = `glass-card p-4 rounded-xl border-l-4 ${borderClass} relative overflow-hidden flex flex-col gap-3 mb-3`;
+                    div.innerHTML = htmlContent;
+                    list.appendChild(div);
                 }
             });
-        },
+
+            // Cleanup
+            Array.from(list.children).forEach(child => {
+                if (child.id && child.id.startsWith('syl-') && !validIds.has(child.id)) {
+                    child.remove();
+                }
+            });
+
+        } else {
+            list.innerHTML = '<div class="text-center text-zinc-500 italic mt-10">No assignments yet.</div>';
+        }
+    });
+},
 
      // NEW: BATCH UPLOAD LOGIC
         processBatch: function() {
@@ -3606,138 +4399,164 @@ acceptTerms: function() {
             });
         },
 
-viewUser: function(uid) {
-            State.viewUid = uid;
-            App.ui.openViewProfile();
 
-            // PREPARE VIBE MATCH DATA
-            const myFavs = State.favorites ? Object.values(State.favorites).map(f => f.artist + ' - ' + f.song) : [];
+   viewUser: function(uid) {
+        State.viewUid = uid;
+        App.ui.openViewProfile();
 
-            App.db.ref('users/' + uid).once('value').then(s => {
-                const u = s.val();
-                
-                // 1. Basic Info
-                document.getElementById('view-handle').innerText = u.handle;
-                document.getElementById('view-bio').innerText = u.bio || "No bio.";
-                
-                // 2. NEW: "Class Of" Logic for View Profile
-                // We inject this dynamically into the handle area
-                const joinedDate = new Date(u.joined || Date.now());
-                const month = joinedDate.toLocaleString('default', { month: 'short' });
-                const year = joinedDate.getFullYear().toString().substr(-2);
-                const classText = `<div class="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Class of ${month} '${year}</div>`;
-                
-                // Clear previous injections to prevent duplicates
-                const handleEl = document.getElementById('view-handle');
-                if(handleEl.nextElementSibling && handleEl.nextElementSibling.classList.contains('view-class-tag')) {
-                    handleEl.nextElementSibling.remove();
+        // PREPARE VIBE MATCH DATA
+        const myFavs = State.favorites ? Object.values(State.favorites).map(f => f.artist + ' - ' + f.song) : [];
+
+        App.db.ref('users/' + uid).once('value').then(s => {
+            const u = s.val();
+            
+            // 1. Basic Info
+            document.getElementById('view-handle').innerText = u.handle;
+            document.getElementById('view-bio').innerText = u.bio || "No bio.";
+            
+            // 2. "Class Of" Logic
+            const joinedDate = new Date(u.joined || Date.now());
+            const month = joinedDate.toLocaleString('default', { month: 'short' });
+            const year = joinedDate.getFullYear().toString().substr(-2);
+            const classText = `<div class="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">Class of ${month} '${year}</div>`;
+            
+            const handleEl = document.getElementById('view-handle');
+            if(handleEl.nextElementSibling && handleEl.nextElementSibling.classList.contains('view-class-tag')) {
+                handleEl.nextElementSibling.remove();
+            }
+            handleEl.insertAdjacentHTML('afterend', `<div class="view-class-tag">${classText}</div>`);
+
+            // 3. Vibe Match Logic
+            if(!State.user.isAnon && uid !== State.user.uid) {
+                const theirFavs = u.favorites ? Object.values(u.favorites).map(f => f.artist + ' - ' + f.song) : [];
+                let matches = 0;
+                theirFavs.forEach(song => { if(myFavs.includes(song)) matches++; });
+
+                let pct = 0;
+                if(myFavs.length > 0 && theirFavs.length > 0) {
+                    pct = Math.round((matches / Math.max(myFavs.length, theirFavs.length)) * 100);
                 }
-                handleEl.insertAdjacentHTML('afterend', `<div class="view-class-tag">${classText}</div>`);
+                const vm = document.getElementById('view-vibe-match');
+                vm.innerText = `⚡ ${pct}% Vibe Match`;
+                vm.classList.remove('hidden');
+            }
 
-                // 3. Vibe Match Logic
-                if(!State.user.isAnon && uid !== State.user.uid) {
-                    const theirFavs = u.favorites ? Object.values(u.favorites).map(f => f.artist + ' - ' + f.song) : [];
-                    let matches = 0;
-                    theirFavs.forEach(song => { if(myFavs.includes(song)) matches++; });
+            // 4. Avatar
+            const img = document.getElementById('view-img');
+            const init = document.getElementById('view-init');
+            if(u.avatar) { img.src = u.avatar; img.classList.remove('hidden'); init.classList.add('hidden'); }
+            else { img.classList.add('hidden'); init.classList.remove('hidden'); init.innerText = u.handle[0]; }
 
-                    let pct = 0;
-                    if(myFavs.length > 0 && theirFavs.length > 0) {
-                        pct = Math.round((matches / Math.max(myFavs.length, theirFavs.length)) * 100);
-                    }
-                    const vm = document.getElementById('view-vibe-match');
-                    vm.innerText = `🎵 ${pct}% Vibe Match`;
-                    vm.classList.remove('hidden');
-                }
+            // 5. Stats (Followers/Following)
+            const followers = u.followers ? Object.keys(u.followers).length : 0;
+            const following = u.following ? Object.keys(u.following).length : 0;
+            
+            const fEl = document.getElementById('view-followers');
+            const pEl = document.getElementById('view-following');
+            
+            fEl.innerHTML = `${followers}`; 
+            pEl.innerHTML = `${following}`;
+            
+            fEl.parentElement.onclick = function() { App.ui.showFollowList('followers', uid); };
+            pEl.parentElement.onclick = function() { App.ui.showFollowList('following', uid); };
 
-                // 4. Avatar
-                const img = document.getElementById('view-img');
-                const init = document.getElementById('view-init');
-                if(u.avatar) { img.src = u.avatar; img.classList.remove('hidden'); init.classList.add('hidden'); }
-                else { img.classList.add('hidden'); init.classList.remove('hidden'); init.innerText = u.handle[0]; }
+            // 6. Rank & GPA Calculation (FIXED: NOW INCLUDES LIVE SHOW HISTORY)
+            const p1 = App.db.ref('posts').orderByChild('uid').equalTo(uid).once('value');
+            const p2 = App.db.ref('history').once('value');
 
-                // 5. Stats (Followers/Following) - FIX: Make them Clickable
-                const followers = u.followers ? Object.keys(u.followers).length : 0;
-                const following = u.following ? Object.keys(u.following).length : 0;
+            Promise.all([p1, p2]).then(results => {
+                const posts = results[0].val();
+                const history = results[1].val();
                 
-                const fEl = document.getElementById('view-followers');
-                const pEl = document.getElementById('view-following');
-                
-                fEl.innerHTML = `${followers}`; 
-                pEl.innerHTML = `${following}`;
-                
-                // Add Click Listeners for Lists
-                fEl.parentElement.onclick = function() { App.ui.showFollowList('followers', uid); };
-                pEl.parentElement.onclick = function() { App.ui.showFollowList('following', uid); };
+                let totalPoints = 0;
+                let gradedCount = 0;
 
-                // 6. Rank & GPA Calculation
-                App.db.ref('posts').orderByChild('uid').equalTo(uid).once('value', snap => {
-                    let totalScore = 0, count = 0;
-                    const posts = snap.val();
-                    if(posts) {
-                        Object.values(posts).forEach(p => {
-                            if(p.grades) {
-                                const grades = Object.values(p.grades);
-                                totalScore += grades.reduce((a,b)=>a+b,0) / grades.length;
-                                count++;
-                            }
-                        });
-                    }
-                    const gpa = count > 0 ? (totalScore / count).toFixed(1) : "0.0";
-                    
-                    let rank = "Freshman";
-                    if(followers > 100) rank = "Sophomore";
-                    if(followers > 500) rank = "Junior";
-                    if(followers > 1000) rank = "Senior";
-                    if(followers > 10000) rank = "Legend";
-                    if(u.role === 'admin') rank = "PROFESSOR";
-
-                    const badgeColor = u.role === 'admin' ? 'background:linear-gradient(135deg, #6366f1, #4f46e5); color:white;' : 'background:#27272a; color:#a1a1aa; border:1px solid #3f3f46;';
-                    
-                                   });
-
-                // 7. Anthem & Rotation
-                App.ui.renderRotation('view-rotation', u.rotation);
-                const ant = document.getElementById('view-anthem');
-                if(u.anthem) {
-                    ant.innerHTML = `<i class="fas fa-music text-blue-500 mr-2"></i><span class="text-blue-400 font-bold text-sm">${u.anthem}</span>`;
-                    ant.classList.remove('hidden');
-                } else { ant.classList.add('hidden'); }
-                
-                // 8. Follow Button Logic
-                if(!State.user.isAnon) {
-                    App.db.ref(`users/${State.user.uid}/following/${uid}`).once('value', snap => {
-                        const btn = document.getElementById('btn-follow');
-                        if(snap.exists()) {
-                            btn.innerText = "Unfollow";
-                            btn.className = "bg-zinc-800 text-white text-xs font-bold px-6 py-2.5 rounded-full border border-zinc-700";
-                        } else {
-                            btn.innerText = "Follow";
-                            btn.className = "bg-blue-600 text-white text-xs font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-900/20";
+                // A. Calculate from Feed Posts
+                if(posts) {
+                    Object.values(posts).forEach(p => {
+                        if(p.grades) {
+                            const grades = Object.values(p.grades);
+                            const avg = grades.reduce((a,b)=>a+b,0) / grades.length; // 0-100
+                            totalPoints += App.utils.toGPA(avg);
+                            gradedCount++;
                         }
                     });
                 }
 
-                // 9. Load Lists (Projects & Crate)
-                // ... (Existing list loading code remains similar, keeping it brief for copy/paste) ...
-                const vl = document.getElementById('view-lists'); vl.innerHTML = '';
-                if(u.lists) {
-                    Object.keys(u.lists).forEach(listId => {
-                        const l = u.lists[listId];
-                        vl.innerHTML += `<div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center text-xs border border-zinc-700/50 mb-2"><div><div class="font-bold text-white">${l.name}</div><div class="text-zinc-500 text-[10px]">${l.songs ? Object.keys(l.songs).length : 0} Songs</div></div></div>`;
+                // B. Calculate from Live History (The Missing Piece)
+                if(history) {
+                    Object.values(history).forEach(h => {
+                        // Check if this user submitted it (matches UID or Handle)
+                        if((h.uid === uid || h.user === u.handle) && h.score && h.classScore) {
+                            // Average Professor + Class
+                            const finalAvg = (h.score + h.classScore) / 2; 
+                            totalPoints += App.utils.toGPA(finalAvg);
+                            gradedCount++;
+                        }
                     });
-                } else { vl.innerHTML = '<div class="text-xs text-zinc-600 italic">No public projects.</div>'; }
+                }
 
-                const vc = document.getElementById('view-crate'); vc.innerHTML = '';
-                App.db.ref(`users/${uid}/favorites`).limitToLast(5).once('value', snap => {
-                    const v = snap.val();
-                    if(v) {
-                        Object.values(v).reverse().forEach(i => {
-                            vc.innerHTML += `<div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center border border-zinc-700/50 mb-2"><div class="flex-1 min-w-0 mr-2"><div class="font-bold text-white text-sm text-truncate">${i.artist}</div><div class="text-xs text-zinc-500 text-truncate">${i.song}</div></div></div>`;
-                        });
-                    } else { vc.innerHTML = '<div class="text-xs text-zinc-600 italic">Crate empty.</div>'; }
-                });
+                // C. Final Math
+                const gpa = gradedCount > 0 ? (totalPoints / gradedCount).toFixed(2) : "0.00";
+                
+                let rank = "Freshman";
+                if(followers > 100) rank = "Sophomore";
+                if(followers > 500) rank = "Junior";
+                if(followers > 1000) rank = "Senior";
+                if(followers > 10000) rank = "Legend";
+                if(u.role === 'admin') rank = "PROFESSOR";
+
+                const badgeColor = u.role === 'admin' ? 'background:linear-gradient(135deg, #6366f1, #4f46e5); color:white; border:none;' : 'background:#27272a; color:#a1a1aa; border:1px solid #3f3f46;';
+                
+                // APPLY TO UI
+                document.getElementById('view-gpa').innerText = gpa; 
+                const rankBadge = document.getElementById('view-rank');
+                rankBadge.innerText = rank;
+                rankBadge.style = badgeColor;
             });
-        },
+
+            // 7. Anthem & Rotation
+            App.ui.renderRotation('view-rotation', u.rotation);
+            const ant = document.getElementById('view-anthem');
+            if(u.anthem) {
+                ant.innerHTML = `<i class="fas fa-music text-blue-500 mr-2"></i><span class="text-blue-400 font-bold text-sm">${u.anthem}</span>`;
+                ant.classList.remove('hidden');
+            } else { ant.classList.add('hidden'); }
+            
+            // 8. Follow Button Logic
+            if(!State.user.isAnon) {
+                App.db.ref(`users/${State.user.uid}/following/${uid}`).once('value', snap => {
+                    const btn = document.getElementById('btn-follow');
+                    if(snap.exists()) {
+                        btn.innerText = "Unfollow";
+                        btn.className = "bg-zinc-800 text-white text-xs font-bold px-6 py-2.5 rounded-full border border-zinc-700";
+                    } else {
+                        btn.innerText = "Follow";
+                        btn.className = "bg-blue-600 text-white text-xs font-bold px-6 py-2.5 rounded-full shadow-lg shadow-blue-900/20";
+                    }
+                });
+            }
+
+            // 9. Load Lists
+            const vl = document.getElementById('view-lists'); vl.innerHTML = '';
+            if(u.lists) {
+                Object.keys(u.lists).forEach(listId => {
+                    const l = u.lists[listId];
+                    vl.innerHTML += `<div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center text-xs border border-zinc-700/50 mb-2"><div><div class="font-bold text-white">${l.name}</div><div class="text-zinc-500 text-[10px]">${l.songs ? Object.keys(l.songs).length : 0} Songs</div></div></div>`;
+                });
+            } else { vl.innerHTML = '<div class="text-xs text-zinc-600 italic">No public projects.</div>'; }
+
+            const vc = document.getElementById('view-crate'); vc.innerHTML = '';
+            App.db.ref(`users/${uid}/favorites`).limitToLast(5).once('value', snap => {
+                const v = snap.val();
+                if(v) {
+                    Object.values(v).reverse().forEach(i => {
+                        vc.innerHTML += `<div class="bg-zinc-800 p-3 rounded-xl flex justify-between items-center border border-zinc-700/50 mb-2"><div class="flex-1 min-w-0 mr-2"><div class="font-bold text-white text-sm text-truncate">${i.artist}</div><div class="text-xs text-zinc-500 text-truncate">${i.song}</div></div></div>`;
+                    });
+                } else { vc.innerHTML = '<div class="text-xs text-zinc-600 italic">Crate empty.</div>'; }
+            });
+        });
+    },
                      toggleFollow: function() {
             if(State.user.isAnon || !State.viewUid) return;
             const refMe = App.db.ref(`users/${State.user.uid}/following/${State.viewUid}`);
