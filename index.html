@@ -3497,7 +3497,48 @@ fetchRankList: function(sessionId) {
         }
     });
 },
- 
+ // PASTE THIS INSIDE App.data { ... }
+        
+        // --- MISSING FUNCTION FOR LIVE SHOW SUBMISSION ---
+        submitGrade: function() {
+            // 1. Safety Checks
+            if (!State.song || !State.song.id) return App.ui.toast("No song playing!", "error");
+            if (State.user.isAnon) return App.ui.toast("Sign in to grade.", "error");
+
+            const uid = State.user.uid;
+            const trackId = State.song.id;
+            
+            // 2. Get Score from the Live Sliders (State.grading)
+            // (These are set by App.ui.updateScore)
+            const score = State.grading.total || 0; 
+            
+            if (score === 0) return App.ui.toast("Adjust sliders first!", "error");
+
+            // 3. Send to Database (Votes Folder)
+            // This allows the "Class Average" to calculate in real-time
+            App.db.ref(`votes/${trackId}/${uid}`).set({
+                total: score,
+                handle: State.user.handle,
+                timestamp: Date.now()
+            }).then(() => {
+                App.ui.toast(`Grade Sent: ${score}`);
+                
+                // 4. Lock the UI locally
+                // We save to localStorage so if they refresh, it stays locked
+                const voted = JSON.parse(localStorage.getItem('voted') || '[]');
+                if(!voted.includes(trackId)) {
+                    voted.push(trackId);
+                    localStorage.setItem('voted', JSON.stringify(voted));
+                }
+                
+                // Force UI to switch to "Locked" view immediately
+                document.getElementById('grade-active').classList.add('hidden');
+                document.getElementById('grade-locked').classList.remove('hidden');
+                
+            }).catch(err => {
+                App.ui.toast("Error: " + err.message, "error");
+            });
+        },
 addToQueue: function() {
     const a = document.getElementById('q-artist').value;
     const s = document.getElementById('q-song').value;
